@@ -526,16 +526,8 @@ public static class FunctionsHelper
         await WindowFunctions.ToggleFullscreen(Vm);
     }
     
-    public static Task Fullscreen()
-    {
-        if (Vm is null)
-        {
-            return Task.CompletedTask;
-        }
-
-        WindowFunctions.Fullscreen(Vm, Application.Current?.ApplicationLifetime as IClassicDesktopStyleApplicationLifetime);
-        return Task.CompletedTask;
-    }
+    // This shouldn't be here, but keep as alias and backwards compatibility.
+    public static Task Fullscreen() => ToggleFullscreen();
 
     public static async Task SetTopMost()
     {
