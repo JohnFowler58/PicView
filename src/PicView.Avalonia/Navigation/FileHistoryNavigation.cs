@@ -67,6 +67,7 @@ public static class FileHistoryNavigation
             return;
         }
 
+        vm.CurrentView = vm.ImageViewer;
         await NavigationManager.LoadPicFromStringAsync(entry, vm);
         return;
         
@@ -74,6 +75,7 @@ public static class FileHistoryNavigation
         {
             if (!string.IsNullOrWhiteSpace(Settings.StartUp.LastFile))
             {
+                vm.CurrentView = vm.ImageViewer;
                 await NavigationManager.LoadPicFromStringAsync(Settings.StartUp.LastFile, vm);
             }
             else
@@ -130,6 +132,8 @@ public static class FileHistoryNavigation
             {
                 return;
             }
+
+            vm.CurrentView = vm.ImageViewer;
 
             await NavigationManager.Navigate(imagePaths.IndexOf(nextEntry), vm).ConfigureAwait(false);
             return;

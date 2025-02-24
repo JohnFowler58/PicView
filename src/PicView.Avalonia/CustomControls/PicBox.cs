@@ -205,7 +205,7 @@ public class PicBox : Control
             return;
         }
         
-        const bool is1To1 = false; // TODO: replace with settings value
+        //const bool is1To1 = false; // TODO: replace with settings value
         var isSideBySide = Settings.ImageScaling.ShowImageSideBySide;
         var secondarySource = SecondarySource as IImage;
         var viewPort = DetermineViewPort();
@@ -285,11 +285,12 @@ public class PicBox : Control
             }
         }
     
-        if (is1To1)
-        {
-            RenderImage1To1(context, source, viewPort, sourceSize);
-        }
-        else if (isSideBySide)
+        //if (is1To1)
+        //{
+        //    RenderImage1To1(context, source, viewPort, sourceSize);
+        //}
+        //else 
+        if (isSideBySide)
         {
             RenderImageSideBySide(context, source, secondarySource, viewPort, sourceSize, secondarySourceSize);
         }
@@ -299,15 +300,15 @@ public class PicBox : Control
         }
     }
 
-    private void RenderImage1To1(DrawingContext context, IImage source, Rect viewPort, Size sourceSize)
-    {
-        var scale = 1.0;
-        var scaledSize = sourceSize * scale;
-        var destRect = viewPort.CenterRect(new Rect(scaledSize)).Intersect(viewPort);
-        var sourceRect = new Rect(sourceSize).CenterRect(new Rect(destRect.Size / scale));
+    //private void RenderImage1To1(DrawingContext context, IImage source, Rect viewPort, Size sourceSize)
+    //{
+    //    var scale = 1.0;
+    //    var scaledSize = sourceSize * scale;
+    //    var destRect = viewPort.CenterRect(new Rect(scaledSize)).Intersect(viewPort);
+    //    var sourceRect = new Rect(sourceSize).CenterRect(new Rect(destRect.Size / scale));
 
-        context.DrawImage(source, sourceRect, destRect);
-    }
+    //    context.DrawImage(source, sourceRect, destRect);
+    //}
 
     private void RenderImage(DrawingContext context, IImage source, Rect viewPort, Size sourceSize)
     {

@@ -67,6 +67,12 @@ public static class NavigationManager
             await ScrollGallery(next);
             return;
         }
+        
+        if (_imageIterator.CurrentIndex < 0 || _imageIterator.CurrentIndex >= _imageIterator.ImagePaths.Count)
+        {
+            ErrorHandling.ShowStartUpMenu(vm);
+            return;
+        }
 
         var navigateTo = next ? NavigateTo.Next : NavigateTo.Previous;
         var nextIteration = _imageIterator.GetIteration(_imageIterator.CurrentIndex, navigateTo);
@@ -446,6 +452,7 @@ public static class NavigationManager
                 }
                 else
                 {
+                    await _imageIterator.DisposeAsync();
                     await ErrorHandling.ReloadAsync(vm);
                 }
             }
@@ -510,6 +517,7 @@ public static class NavigationManager
         }
         else
         {
+            await _imageIterator.DisposeAsync();
             await ErrorHandling.ReloadAsync(vm);
         }
     }
@@ -522,9 +530,10 @@ public static class NavigationManager
     /// <returns>A task representing the asynchronous operation.</returns>
     public static async Task LoadPicFromUrlAsync(string url, MainViewModel vm)
     {
+        var tasks = new List<Task>();
         if (_cancellationTokenSource is not null)
         {
-            await _cancellationTokenSource.CancelAsync();
+            tasks.Add(_cancellationTokenSource.CancelAsync());
         }
 
         string destination;
@@ -552,7 +561,13 @@ public static class NavigationManager
                     vm.PlatformService.SetTaskbarProgress((ulong)totalBytesDownloaded, (ulong)totalFileSize);
                 }
             };
-            await client.StartDownloadAsync().ConfigureAwait(false);
+            tasks.Add(client.StartDownloadAsync());
+            if (_imageIterator is not null)
+            {
+                tasks.Add(_imageIterator.DisposeAsync().AsTask());
+            }
+            
+            await Task.WhenAll(tasks).ConfigureAwait(false);
             destination = httpDownload.DownloadPath;
         }
         catch (Exception e)
@@ -560,9 +575,9 @@ public static class NavigationManager
 #if DEBUG
             Console.WriteLine("LoadPicFromUrlAsync exception = \n" + e.Message);
 #endif
-            await TooltipHelper.ShowTooltipMessageAsync(e.Message, true);
-            await ErrorHandling.ReloadAsync(vm);
-
+            await Task.WhenAll(
+                TooltipHelper.ShowTooltipMessageAsync(e.Message, true),
+                ErrorHandling.ReloadAsync(vm)).ConfigureAwait(false);
             return;
         }
 
@@ -627,7 +642,8 @@ public static class NavigationManager
                 }
                 else
                 {
-                    ErrorHandling.ShowStartUpMenu(vm);
+                    await _imageIterator.DisposeAsync();
+                    await ErrorHandling.ReloadAsync(vm);
                 }
             }
         });
@@ -778,7 +794,6 @@ public static class NavigationManager
 
     #endregion
 
-
     #region Reload
 
     public static async Task QuickReload()
@@ -824,8 +839,6 @@ public static class NavigationManager
 
     #endregion
     
-
-
     /// <summary>
     ///     Checks if the previous iteration has been cancelled and starts the iteration at the given index in a new task.
     /// </summary>
@@ -842,7 +855,6 @@ public static class NavigationManager
 
             _cancellationTokenSource = new CancellationTokenSource();
             _ = _imageIterator.NextIteration(index, _cancellationTokenSource).ConfigureAwait(false);
-            _cancellationTokenSource.CancelAfter(TimeSpan.FromMinutes(5));
         }).ConfigureAwait(false);
     }
 

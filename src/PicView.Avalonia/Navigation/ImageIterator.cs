@@ -190,10 +190,15 @@ public class ImageIterator : IAsyncDisposable
                     return;
                 }
 
-                await NavigationManager.Iterate(false, _vm);
+                RemoveCurrentItemFromPreLoader();
+
+                CurrentIndex = GetIteration(index, NavigateTo.Previous);
+
+                await IterateToIndex(CurrentIndex, new CancellationTokenSource());
             }
             else
             {
+                RemoveItemFromPreLoader(index);
                 SetTitleHelper.SetTitle(_vm);
             }
 
@@ -211,7 +216,10 @@ public class ImageIterator : IAsyncDisposable
                 var indexOf = ImagePaths.IndexOf(_vm.FileInfo.FullName);
                 _vm.SelectedGalleryItemIndex = indexOf; // Fixes deselection bug
                 CurrentIndex = indexOf;
-                GalleryNavigation.CenterScrollToSelectedItem(_vm);
+                if (isSameFile)
+                {
+                    GalleryNavigation.CenterScrollToSelectedItem(_vm);
+                }
             }
         
             await PreLoader.ResynchronizeAsync(ImagePaths);

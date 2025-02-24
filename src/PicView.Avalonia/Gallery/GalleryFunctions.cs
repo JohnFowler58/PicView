@@ -100,11 +100,15 @@ public static class GalleryFunctions
             else
             {
                 var lastIndex = galleryListBox.Items.Count - 1 < 0 ? galleryListBox.Items.Count - 1 : 0;
+                if (lastIndex <= -1)
+                {
+                    return;
+                }
+
                 if (galleryListBox.Items[lastIndex] is GalleryItem galleryItem)
                 {
                     galleryListBox.Items.Remove(galleryItem);
                 }
-                
             }
         }
     }
