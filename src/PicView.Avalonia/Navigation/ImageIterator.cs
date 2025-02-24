@@ -501,7 +501,7 @@ public class ImageIterator : IAsyncDisposable
                 // Wait for image to load
                 if (preloadValue is { IsLoading: true, ImageModel.Image: null })
                 {
-                    UpdateImage.LoadingPreview(_vm, CurrentIndex);
+                    LoadingPreview();
 
                     var retries = 0;
                     do
@@ -528,7 +528,7 @@ public class ImageIterator : IAsyncDisposable
             }
             else
             {
-                UpdateImage.LoadingPreview(_vm, CurrentIndex);
+                LoadingPreview();
                 preloadValue = await GetCurrentPreLoadValueAsync().ConfigureAwait(false);
             }
 
@@ -595,7 +595,6 @@ public class ImageIterator : IAsyncDisposable
         }
         catch (OperationCanceledException)
         {
-            // Ignore
 #if DEBUG
             Trace.WriteLine($"\n{nameof(IterateToIndex)} canceled\n");
 #endif
@@ -609,7 +608,46 @@ public class ImageIterator : IAsyncDisposable
         }
         finally
         {
-            _vm.IsLoading = false;
+            if (index == CurrentIndex)
+            {
+                _vm.IsLoading = false;
+            }
+        }
+        
+        return;
+        
+        void LoadingPreview()
+        {
+            SetTitleHelper.SetLoadingTitle(_vm);
+            _vm.IsLoading = true;
+
+            _vm.SelectedGalleryItemIndex = index;
+            if (Settings.Gallery.IsBottomGalleryShown)
+            {
+                GalleryNavigation.CenterScrollToSelectedItem(_vm);
+            }
+            
+            var thumb = GetThumbnails.GetExifThumb(NavigationManager.GetFileNameAt(index));
+
+            if (index != CurrentIndex)
+            {
+                return;
+            }
+
+            if (!Settings.ImageScaling.ShowImageSideBySide)
+            {
+                _vm.ImageSource = thumb;
+            }
+            else
+            {
+                var secondaryThumb = GetThumbnails.GetExifThumb(NavigationManager.GetNextFileName);
+                if (index != CurrentIndex)
+                {
+                    return;
+                }
+                _vm.ImageSource = thumb;
+                _vm.SecondaryImageSource = secondaryThumb;
+            }
         }
     }
 

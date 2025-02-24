@@ -302,7 +302,7 @@ public static class UpdateImage
 
     #endregion
 
-    #region Set stats and loading preview
+    #region Set stats
 
     public static void SetStats(MainViewModel vm, int index, ImageModel imageModel)
     {
@@ -322,34 +322,6 @@ public static class UpdateImage
 
         // Reset effects
         vm.EffectConfig = null;
-    }
-
-    /// <summary>
-    ///     Shows the preview of the image at the given index and sets the view model to a loading state.
-    /// </summary>
-    /// <param name="vm">The main view model instance.</param>
-    /// <param name="index">The index of the image to preview.</param>
-    public static void LoadingPreview(MainViewModel vm, int index)
-    {
-        SetTitleHelper.SetLoadingTitle(vm);
-        vm.IsLoading = true;
-
-        vm.SelectedGalleryItemIndex = index;
-        if (Settings.Gallery.IsBottomGalleryShown)
-        {
-            GalleryNavigation.CenterScrollToSelectedItem(vm);
-        }
-
-        vm.ImageSource = GetThumbnails.GetExifThumb(NavigationManager.GetFileNameAt(index));
-        if (Settings.ImageScaling.ShowImageSideBySide)
-        {
-            vm.SecondaryImageSource =
-                GetThumbnails.GetExifThumb(NavigationManager.GetNextFileName);
-        }
-        else
-        {
-            vm.SecondaryImageSource = null;
-        }
     }
 
     #endregion
