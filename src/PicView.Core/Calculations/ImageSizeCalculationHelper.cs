@@ -134,7 +134,7 @@ public static class ImageSizeCalculationHelper
             else
             {
                 scrollWidth = containerWidth + SizeDefaults.ScrollbarSize;
-                scrollHeight = containerHeight;
+                scrollHeight = containerHeight - margin;
 
                 xWidth = containerWidth - SizeDefaults.ScrollbarSize + 10;
                 xHeight = height / width * xWidth;
