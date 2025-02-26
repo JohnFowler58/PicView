@@ -328,16 +328,16 @@ public static class ImageSizeCalculationHelper
             titleMaxWidth = titleMaxWidth - interfaceSize < interfaceSize
                 ? interfaceSize
                 : titleMaxWidth - interfaceSize;
-
-            if (Settings.Zoom.ScrollEnabled)
-            {
-                titleMaxWidth += SizeDefaults.ScrollbarSize + 10;
-            }
         }
         else
         {
             // Fix title width to window size
             titleMaxWidth = containerWidth - interfaceSize <= 0 ? 0 : containerWidth - interfaceSize;
+        }
+
+        if (Settings.Zoom.ScrollEnabled)
+        {
+            titleMaxWidth += SizeDefaults.ScrollbarSize + 10;
         }
 
         return titleMaxWidth;
