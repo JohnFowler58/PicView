@@ -1,4 +1,5 @@
-﻿using Avalonia.Threading;
+﻿using Avalonia.Layout;
+using Avalonia.Threading;
 using PicView.Avalonia.Gallery;
 using PicView.Avalonia.ImageHandling;
 using PicView.Avalonia.Navigation;
@@ -63,9 +64,7 @@ public static class QuickLoad
             else if (vm.PixelWidth > UIHelper.GetMainView.Bounds.Width || vm.PixelHeight > UIHelper.GetMainView.Bounds.Height)
             {
                 // Fixes weird bug where the image is not rendered correctly
-                vm.ImageViewer.MainBorder.Width = vm.ImageViewer.ImageScrollViewer.Bounds.Width;
-                vm.ImageViewer.MainBorder.Height = vm.ImageViewer.ImageScrollViewer.Bounds.Height;
-                WindowResizing.SetSize(vm);
+                vm.ImageViewer.MainBorder.HorizontalAlignment = HorizontalAlignment.Left;
             }
         }, DispatcherPriority.Send);
 
