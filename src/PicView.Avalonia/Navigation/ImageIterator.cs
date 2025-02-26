@@ -569,7 +569,7 @@ public class ImageIterator : IAsyncDisposable
 
                 if (!cts.IsCancellationRequested && index == CurrentIndex)
                 {
-                    await UpdateImage.UpdateSource(_vm, index, ImagePaths, IsReversed, preloadValue,
+                    await UpdateImage.UpdateSource(_vm, index, ImagePaths, preloadValue,
                             nextPreloadValue)
                         .ConfigureAwait(false);
                 }
@@ -578,7 +578,7 @@ public class ImageIterator : IAsyncDisposable
             {
                 if (!cts.IsCancellationRequested && index == CurrentIndex)
                 {
-                    await UpdateImage.UpdateSource(_vm, index, ImagePaths, IsReversed, preloadValue)
+                    await UpdateImage.UpdateSource(_vm, index, ImagePaths, preloadValue)
                         .ConfigureAwait(false);
                 }
             }

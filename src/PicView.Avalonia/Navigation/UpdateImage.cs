@@ -24,11 +24,10 @@ public static class UpdateImage
     /// <param name="vm">The main view model instance.</param>
     /// <param name="index">The index of the image to update.</param>
     /// <param name="imagePaths">The list of image paths to navigate through.</param>
-    /// <param name="isReversed">Indicates if the navigation is in reverse order.</param>
     /// <param name="preLoadValue">The preloaded value of the current image.</param>
     /// <param name="nextPreloadValue">Optional: The preloaded value of the next image, used for side-by-side display.</param>
     /// <returns>A task representing the asynchronous operation.</returns>
-    public static async Task UpdateSource(MainViewModel vm, int index, List<string> imagePaths, bool isReversed,
+    public static async Task UpdateSource(MainViewModel vm, int index, List<string> imagePaths,
         PreLoadValue? preLoadValue,
         PreLoadValue? nextPreloadValue = null)
     {
