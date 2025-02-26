@@ -10,7 +10,7 @@ public static class ImageSizeCalculationHelper
     public static double GetInterfaceSize()
     {
         // TODO: find a more elegant solution
-        return RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? 165 : 230;
+        return RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? 165 : 221;
     }
 
     public static ImageSize GetImageSize(double width,
@@ -328,16 +328,22 @@ public static class ImageSizeCalculationHelper
             titleMaxWidth = titleMaxWidth - interfaceSize < interfaceSize
                 ? interfaceSize
                 : titleMaxWidth - interfaceSize;
+            
+            
+            if (Settings.Zoom.ScrollEnabled)
+            {
+                titleMaxWidth += SizeDefaults.ScrollbarSize + 10;
+            }
         }
         else
         {
             // Fix title width to window size
             titleMaxWidth = containerWidth - interfaceSize <= 0 ? 0 : containerWidth - interfaceSize;
-        }
-
-        if (Settings.Zoom.ScrollEnabled)
-        {
-            titleMaxWidth += SizeDefaults.ScrollbarSize + 10;
+            
+            if (Settings.Zoom.ScrollEnabled)
+            {
+                titleMaxWidth += SizeDefaults.ScrollbarSize;
+            }
         }
 
         return titleMaxWidth;

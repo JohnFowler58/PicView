@@ -96,7 +96,7 @@
                 Foreground="{DynamicResource MainTextColor}"
                 IconHeight="10"
                 IconWidth="10"
-                Width="35"
+                Width="32"
                 x:Name="CloseButton" />
 
             <customControls:IconButton
@@ -111,7 +111,7 @@
                 Foreground="{DynamicResource MainTextColor}"
                 IconHeight="12"
                 IconWidth="12"
-                Width="35"
+                Width="32"
                 x:Name="RestoreButton" />
 
             <customControls:IconButton
@@ -126,7 +126,7 @@
                 Foreground="{DynamicResource MainTextColor}"
                 IconHeight="12"
                 IconWidth="12"
-                Width="35"
+                Width="32"
                 x:Name="MinimizeButton" />
             <uc:EditableTitlebar
                 Background="{DynamicResource WindowSecondaryBackgroundColor}"
