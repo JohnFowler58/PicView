@@ -64,7 +64,13 @@ public static class QuickLoad
             {
                 // Fixes weird bug where the image is not rendered correctly
                 // TODO: check if this will still be needed in future Avalonia versions
+                if (vm.PixelHeight > vm.ImageViewer.Bounds.Height)
+                {
+                    vm.ImageViewer.MainBorder.Height = vm.ImageViewer.ImageScrollViewer.Bounds.Height;
+                }
+
                 vm.ImageViewer.MainBorder.Width = vm.ImageViewer.ImageScrollViewer.Bounds.Width;
+
                 WindowResizing.SetSize(vm);
             }
         }, DispatcherPriority.Send);
