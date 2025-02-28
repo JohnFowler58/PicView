@@ -9,6 +9,12 @@ public static class TiffManager
         return path.EndsWith(".tif", StringComparison.OrdinalIgnoreCase) ||
                path.EndsWith(".tiff", StringComparison.OrdinalIgnoreCase);
     }
+    
+    public static bool IsTiff(FileInfo fileInfo)
+    {
+        return fileInfo.Extension.Equals(".tif", StringComparison.OrdinalIgnoreCase) ||
+               fileInfo.Extension.Equals(".tiff", StringComparison.OrdinalIgnoreCase);
+    }
 
     public static MagickImageCollection? LoadTiffPages(string path)
     {

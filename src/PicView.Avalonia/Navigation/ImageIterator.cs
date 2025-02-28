@@ -43,7 +43,9 @@ public class ImageIterator : IAsyncDisposable
 
     public ImageIterator(FileInfo fileInfo, MainViewModel vm)
     {
+#if DEBUG
         ArgumentNullException.ThrowIfNull(fileInfo);
+#endif
         _vm = vm;
         ImagePaths = vm.PlatformService.GetFiles(fileInfo);
         CurrentIndex = Directory.Exists(fileInfo.FullName) ? 0 : ImagePaths.IndexOf(fileInfo.FullName);
@@ -52,7 +54,9 @@ public class ImageIterator : IAsyncDisposable
 
     public ImageIterator(FileInfo fileInfo, List<string> imagePaths, int currentIndex, MainViewModel vm)
     {
+#if DEBUG
         ArgumentNullException.ThrowIfNull(fileInfo);
+#endif
         _vm = vm;
         ImagePaths = imagePaths;
         CurrentIndex = currentIndex;
@@ -114,7 +118,7 @@ public class ImageIterator : IAsyncDisposable
 
             ImagePaths = newList;
 
-            SetTitleHelper.RefreshTitle(_vm);
+            SetTitleHelper.SetTitle(_vm);
 
             var index = ImagePaths.IndexOf(e.FullPath);
             if (index < 0)
@@ -458,6 +462,9 @@ public class ImageIterator : IAsyncDisposable
                 break;
 
             default:
+#if DEBUG
+         Console.WriteLine($"{nameof(ImageIterator)}: {navigateTo} is not a valid NavigateTo value.");       
+#endif
                 return -1;
         }
 
