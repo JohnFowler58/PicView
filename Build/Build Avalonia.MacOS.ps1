@@ -41,7 +41,7 @@ $tempBuildPath = Join-Path -Path $outputPath -ChildPath "temp"
 New-Item -ItemType Directory -Force -Path $tempBuildPath
 
 # Run dotnet publish for the Avalonia project
-dotnet publish -f net9.0 $avaloniaProjectPath `
+dotnet publish $avaloniaProjectPath `
     --runtime "osx-$Platform" `
     --self-contained true `
     --configuration Release `
