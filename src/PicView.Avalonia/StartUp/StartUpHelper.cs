@@ -153,8 +153,7 @@ public static class StartUpHelper
     {
         if (Settings.Zoom.ScrollEnabled)
         {
-            vm.ToggleScrollBarVisibility = ScrollBarVisibility.Visible;
-            vm.IsScrollingEnabled = true;
+            SettingsUpdater.TurnOnScroll(vm);
         }
         else
         {
