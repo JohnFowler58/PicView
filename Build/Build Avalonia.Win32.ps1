@@ -35,7 +35,7 @@ $coreCsproj.Save($coreProjectPath)
 $avaloniaProjectPath = Join-Path -Path $PSScriptRoot -ChildPath "..\src\PicView.Avalonia.Win32\PicView.Avalonia.Win32.csproj"
 
 # Run dotnet publish for the Avalonia project
-dotnet publish $avaloniaProjectPath --runtime "win-$Platform" --self-contained true --configuration Release --output $outputPath /p:PublishReadyToRun=true
+dotnet publish -f net9.0-windows10.0.22621.0 $avaloniaProjectPath --runtime "win-$Platform" --self-contained true --configuration Release --output $outputPath /p:PublishReadyToRun=true
 
 
 # Remove the PDB file
