@@ -54,6 +54,8 @@
                     Data="{StaticResource ReloadGeometry}"
                     IconHeight="17"
                     IconWidth="17"
+                    IsEnabled="{CompiledBinding ImageSource,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}"
                     ToolTip.Tip="{CompiledBinding Reload,
                                                   Mode=OneWay}" />
 
@@ -66,6 +68,8 @@
                     Data="{StaticResource PrintGeometry}"
                     IconHeight="17"
                     IconWidth="17"
+                    IsEnabled="{CompiledBinding FileInfo,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}"
                     ToolTip.Tip="{CompiledBinding Print,
                                                   Mode=OneWay}" />
 
@@ -78,6 +82,8 @@
                     Data="{StaticResource RecycleGeometry}"
                     IconHeight="17"
                     IconWidth="17"
+                    IsEnabled="{CompiledBinding FileInfo,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}"
                     ToolTip.Tip="{CompiledBinding DeleteFile,
                                                   Mode=OneWay}" />
 
@@ -88,6 +94,8 @@
                     Data="{StaticResource SaveGeometry}"
                     IconHeight="17"
                     IconWidth="17"
+                    IsEnabled="{CompiledBinding ImageSource,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}"
                     ToolTip.Tip="{CompiledBinding Save,
                                                   Mode=OneWay}" />
 
@@ -100,6 +108,8 @@
                     Data="{StaticResource CopyGeometry}"
                     IconHeight="17"
                     IconWidth="17"
+                    IsEnabled="{CompiledBinding FileInfo,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}"
                     ToolTip.Tip="{CompiledBinding CopyFile,
                                                   Mode=OneWay}" />
 
@@ -112,6 +122,8 @@
                     Data="{StaticResource DuplicateGeometry}"
                     IconHeight="17"
                     IconWidth="17"
+                    IsEnabled="{CompiledBinding FileInfo,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}"
                     ToolTip.Tip="{CompiledBinding DuplicateFile,
                                                   Mode=OneWay}" />
 
@@ -158,6 +170,8 @@
                     CommandParameter="{CompiledBinding FileInfo.FullName,
                                                        FallbackValue=''}"
                     Height="46"
+                    IsEnabled="{CompiledBinding FileInfo,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}"
                     ToolTip.Tip="{CompiledBinding OpenWith}">
                     <StackPanel Orientation="Horizontal">
                         <Path
@@ -181,6 +195,8 @@
                     CommandParameter="{CompiledBinding FileInfo.FullName,
                                                        FallbackValue=''}"
                     Height="46"
+                    IsEnabled="{CompiledBinding FileInfo,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}"
                     ToolTip.Tip="{CompiledBinding ShowInFolder,
                                                   Mode=OneWay}">
                     <StackPanel Orientation="Horizontal">
@@ -202,6 +218,8 @@
                     Classes="ButtonBorder altHover"
                     Command="{CompiledBinding RenameCommand}"
                     Height="46"
+                    IsEnabled="{CompiledBinding FileInfo,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}"
                     ToolTip.Tip="{CompiledBinding RenameFile,
                                                   Mode=OneWay}">
                     <StackPanel Orientation="Horizontal">

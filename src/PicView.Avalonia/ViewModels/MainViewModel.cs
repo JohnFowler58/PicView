@@ -483,7 +483,13 @@ public class MainViewModel : ViewModelBase
 
     #region Booleans
     
-    public bool AreNavigationButtonsEnabled
+    public bool ShouldCropBeEnabled
+    {
+        get;
+        set => this.RaiseAndSetIfChanged(ref field, value);
+    }
+    
+    public bool ShouldOptimizeImageBeEnabled
     {
         get;
         set => this.RaiseAndSetIfChanged(ref field, value);

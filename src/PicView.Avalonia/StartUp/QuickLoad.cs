@@ -85,7 +85,6 @@ public static class QuickLoad
         vm.IsLoading = false;
         
         NavigationManager.InitializeImageIterator(vm);
-        vm.AreNavigationButtonsEnabled = true;
         
         if (Settings.ImageScaling.ShowImageSideBySide)
         {

@@ -45,7 +45,8 @@
                 Foreground="{DynamicResource MainTextColor}"
                 IconHeight="17"
                 IconWidth="17"
-                IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
+                IsEnabled="{CompiledBinding FileInfo,
+                                            Converter={x:Static ObjectConverters.IsNotNull}}"
                 Width="30"
                 x:Name="GalleryButton" />
 
@@ -58,6 +59,8 @@
                 Icon="{StaticResource RefreshCcwDot}"
                 IconHeight="16"
                 IconWidth="16"
+                IsEnabled="{CompiledBinding ImageSource,
+                                            Converter={x:Static ObjectConverters.IsNotNull}}"
                 Margin="0"
                 Name="RotateRightButton"
                 ToolTip.Tip="{CompiledBinding RotateRight,
@@ -76,6 +79,8 @@
                 Foreground="{DynamicResource MainTextColor}"
                 IconHeight="16"
                 IconWidth="16"
+                IsEnabled="{CompiledBinding ImageSource,
+                                            Converter={x:Static ObjectConverters.IsNotNull}}"
                 Margin="0"
                 ToolTip.Tip="{CompiledBinding GetIsFlippedTranslation,
                                               Mode=OneWay}"

@@ -31,6 +31,8 @@
             Foreground="{DynamicResource MainTextColor}"
             IconHeight="12"
             IconWidth="12"
+            IsEnabled="{CompiledBinding FileInfo,
+                                        Converter={x:Static ObjectConverters.IsNotNull}}"
             IsTabStop="False"
             Margin="0"
             ToolTip.Tip="{CompiledBinding GetIsFlippedTranslation,
@@ -53,6 +55,8 @@
             Icon="{StaticResource RefreshCcwDot}"
             IconHeight="13"
             IconWidth="13"
+            IsEnabled="{CompiledBinding FileInfo,
+                                        Converter={x:Static ObjectConverters.IsNotNull}}"
             IsTabStop="False"
             Margin="0"
             ToolTip.Tip="{CompiledBinding RotateRight}"
@@ -70,7 +74,8 @@
             Foreground="{DynamicResource MainTextColor}"
             IconHeight="17"
             IconWidth="17"
-            IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
+            IsEnabled="{CompiledBinding FileInfo,
+                                        Converter={x:Static ObjectConverters.IsNotNull}}"
             IsTabStop="False"
             Name="GalleryButton"
             Width="30" />

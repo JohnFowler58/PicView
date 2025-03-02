@@ -155,9 +155,12 @@
                     Classes="ButtonBorder altHover"
                     Command="{CompiledBinding OptimizeImageCommand}"
                     Height="46"
+                    IsEnabled="{CompiledBinding ShouldOptimizeImageBeEnabled,
+                                                Mode=OneWay}"
                     ToolTip.Tip="{CompiledBinding OptimizeImage,
                                                   Mode=OneWay}"
-                    Width="169">
+                    Width="169"
+                    x:Name="OptimizeImageButton">
                     <StackPanel Orientation="Horizontal">
                         <Image
                             Height="20"

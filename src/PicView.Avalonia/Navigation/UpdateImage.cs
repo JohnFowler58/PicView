@@ -289,7 +289,6 @@ public static class UpdateImage
         vm.Title = singeImageWindowTitles.BaseTitle;
         vm.TitleTooltip = singeImageWindowTitles.BaseTitle;
 
-        vm.AreNavigationButtonsEnabled = false;
         vm.PlatformService.StopTaskbarProgress();
 
         vm.PixelWidth = width;

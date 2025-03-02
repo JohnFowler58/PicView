@@ -86,11 +86,13 @@ public static class CropFunctions
         }
         if (vm?.ImageSource is not Bitmap)
         {
+            vm.ShouldCropBeEnabled = false;
             return false;
         }
 
         if (Settings.ImageScaling.ShowImageSideBySide)
         {
+            vm.ShouldCropBeEnabled = false;
             return false;
         }
 
@@ -103,7 +105,14 @@ public static class CropFunctions
         {
             return false;
         }
+
+        if (vm.RotationAngle is 0 && vm.ScaleX is 1)
+        {
+            vm.ShouldCropBeEnabled = true;
+            return true;
+        }
         
-        return vm is { ScaleX: 1, RotationAngle: 0 };
+        vm.ShouldCropBeEnabled = false;
+        return false;
     }
 }

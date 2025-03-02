@@ -52,6 +52,8 @@
                     Height="45"
                     IconHeight="15"
                     IconWidth="15"
+                    IsEnabled="{CompiledBinding ImageSource,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}"
                     ToolTip.Tip="{CompiledBinding RotateLeft,
                                                   Mode=OneWay}"
                     Width="45"
@@ -67,6 +69,8 @@
                     Height="45"
                     IconHeight="15"
                     IconWidth="15"
+                    IsEnabled="{CompiledBinding ImageSource,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}"
                     ToolTip.Tip="{CompiledBinding RotateRight,
                                                   Mode=OneWay}"
                     Width="45"
@@ -84,6 +88,8 @@
                     Height="45"
                     IconHeight="15"
                     IconWidth="15"
+                    IsEnabled="{CompiledBinding ImageSource,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}"
                     ToolTip.Tip="{CompiledBinding GetIsFlippedTranslation,
                                                   Mode=OneWay}"
                     Width="45">
@@ -116,6 +122,8 @@
                     Canvas.Left="180"
                     Classes="noBorderHover"
                     Height="45"
+                    IsEnabled="{CompiledBinding FileInfo,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}"
                     ToolTip.Tip="{CompiledBinding GoToImageAtSpecifiedIndex,
                                                   Mode=OneWay}"
                     Width="90"
@@ -185,6 +193,8 @@
                     Classes="ButtonBorder altHover"
                     Command="{CompiledBinding ShowSingleImageResizeWindowCommand}"
                     Height="46"
+                    IsEnabled="{CompiledBinding FileInfo,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}"
                     ToolTip.Tip="{CompiledBinding ResizeImage,
                                                   Mode=OneWay}">
                     <StackPanel Orientation="Horizontal">
@@ -234,10 +244,10 @@
                     Classes="ButtonBorder altHover"
                     Command="{CompiledBinding CropCommand}"
                     Height="46"
-                    IsEnabled="False"
+                    IsEnabled="{CompiledBinding ShouldCropBeEnabled,
+                                                Mode=OneWay}"
                     ToolTip.Tip="{CompiledBinding Crop,
-                                                  Mode=OneWay}"
-                    x:Name="CropButton">
+                                                  Mode=OneWay}">
                     <StackPanel Orientation="Horizontal">
                         <Path
                             Data="{StaticResource CropGeometry}"
@@ -260,6 +270,8 @@
                     CommandParameter="0"
                     Foreground="{DynamicResource MainTextColor}"
                     Height="46"
+                    IsEnabled="{CompiledBinding FileInfo,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}"
                     ToolTip.Tip="{CompiledBinding Slideshow,
                                                   Mode=OneWay}"
                     x:Name="SlideShowButton">

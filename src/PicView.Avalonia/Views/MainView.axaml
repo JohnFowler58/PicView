@@ -422,7 +422,8 @@
                     Command="{CompiledBinding NextCommand}"
                     Header="{CompiledBinding NextImage,
                                              Mode=OneWay}"
-                    IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
+                    IsEnabled="{CompiledBinding FileInfo,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}"
                     StaysOpenOnClick="True">
                     <MenuItem.Icon>
                         <Image
@@ -437,8 +438,9 @@
                     Command="{CompiledBinding PreviousCommand}"
                     Header="{CompiledBinding PrevImage,
                                              Mode=OneWay}"
+                    IsEnabled="{CompiledBinding FileInfo,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}"
                     StaysOpenOnClick="True">
-                    IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
                     <MenuItem.Icon>
                         <Image
                             Height="12"
@@ -454,7 +456,8 @@
                     Command="{CompiledBinding Skip10Command}"
                     Header="{CompiledBinding AdvanceBy10Images,
                                              Mode=OneWay}"
-                    IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
+                    IsEnabled="{CompiledBinding FileInfo,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}"
                     StaysOpenOnClick="True">
                     <MenuItem.Icon>
                         <Image
@@ -469,7 +472,8 @@
                     Command="{CompiledBinding Skip100Command}"
                     Header="{CompiledBinding AdvanceBy100Images,
                                              Mode=OneWay}"
-                    IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
+                    IsEnabled="{CompiledBinding FileInfo,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}"
                     StaysOpenOnClick="True">
                     <MenuItem.Icon>
                         <Image
@@ -484,7 +488,8 @@
                     Command="{CompiledBinding Prev10Command}"
                     Header="{CompiledBinding GoBackBy10Images,
                                              Mode=OneWay}"
-                    IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
+                    IsEnabled="{CompiledBinding FileInfo,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}"
                     StaysOpenOnClick="True">
                     <MenuItem.Icon>
                         <Image
@@ -499,7 +504,8 @@
                     Command="{CompiledBinding Prev100Command}"
                     Header="{CompiledBinding GoBackBy100Images,
                                              Mode=OneWay}"
-                    IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
+                    IsEnabled="{CompiledBinding FileInfo,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}"
                     StaysOpenOnClick="True">
                     <MenuItem.Icon>
                         <Image
@@ -512,7 +518,11 @@
                 <Separator />
 
                 <!--  First Image  -->
-                <MenuItem Command="{CompiledBinding FirstCommand}" Header="{CompiledBinding FirstImage}">
+                <MenuItem
+                    Command="{CompiledBinding FirstCommand}"
+                    Header="{CompiledBinding FirstImage}"
+                    IsEnabled="{CompiledBinding FileInfo,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}">
                     <MenuItem.Icon>
                         <Image
                             Height="12"
@@ -522,7 +532,12 @@
                 </MenuItem>
 
                 <!--  Last Image  -->
-                <MenuItem Command="{CompiledBinding LastCommand}" Header="{CompiledBinding LastImage, Mode=OneWay}">
+                <MenuItem
+                    Command="{CompiledBinding LastCommand}"
+                    Header="{CompiledBinding LastImage,
+                                             Mode=OneWay}"
+                    IsEnabled="{CompiledBinding FileInfo,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}">
                     <MenuItem.Icon>
                         <Image
                             Height="12"
@@ -534,7 +549,12 @@
                 <Separator />
 
                 <!--  Next folder  -->
-                <MenuItem Command="{CompiledBinding NextFolderCommand}" Header="{CompiledBinding NextFolder, Mode=OneWay}">
+                <MenuItem
+                    Command="{CompiledBinding NextFolderCommand}"
+                    Header="{CompiledBinding NextFolder,
+                                             Mode=OneWay}"
+                    IsEnabled="{CompiledBinding FileInfo,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}">
                     <MenuItem.Icon>
                         <Image
                             Height="14"
@@ -544,7 +564,12 @@
                 </MenuItem>
 
                 <!--  Prev folder  -->
-                <MenuItem Command="{CompiledBinding PreviousFolderCommand}" Header="{CompiledBinding PrevFolder, Mode=OneWay}">
+                <MenuItem
+                    Command="{CompiledBinding PreviousFolderCommand}"
+                    Header="{CompiledBinding PrevFolder,
+                                             Mode=OneWay}"
+                    IsEnabled="{CompiledBinding FileInfo,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}">
                     <MenuItem.Icon>
                         <Image
                             Height="14"
@@ -557,7 +582,12 @@
             <Separator />
 
             <!--  Set as wallpaper  -->
-            <MenuItem Header="{CompiledBinding SetAsWallpaper, Mode=OneWay}" x:Name="WallpaperMenuItem">
+            <MenuItem
+                Header="{CompiledBinding SetAsWallpaper,
+                                         Mode=OneWay}"
+                IsEnabled="{CompiledBinding ImageSource,
+                                            Converter={x:Static ObjectConverters.IsNotNull}}"
+                x:Name="WallpaperMenuItem">
                 <MenuItem.Icon>
                     <Path
                         Data="{StaticResource PanoramaGeometry}"
@@ -573,7 +603,9 @@
                     CommandParameter="{CompiledBinding FileInfo.FullName,
                                                        FallbackValue=''}"
                     Header="{CompiledBinding Fill,
-                                             Mode=OneWay}">
+                                             Mode=OneWay}"
+                    IsEnabled="{CompiledBinding ImageSource,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}">
                     <MenuItem.Icon>
                         <Path
                             Data="{StaticResource PanoramaGeometry}"
@@ -590,7 +622,9 @@
                     CommandParameter="{CompiledBinding FileInfo.FullName,
                                                        FallbackValue=''}"
                     Header="{CompiledBinding Fit,
-                                             Mode=OneWay}">
+                                             Mode=OneWay}"
+                    IsEnabled="{CompiledBinding ImageSource,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}">
                     <MenuItem.Icon>
                         <Path
                             Data="{StaticResource PanoramaGeometry}"
@@ -607,7 +641,9 @@
                     CommandParameter="{CompiledBinding FileInfo.FullName,
                                                        FallbackValue=''}"
                     Header="{CompiledBinding Stretch,
-                                             Mode=OneWay}">
+                                             Mode=OneWay}"
+                    IsEnabled="{CompiledBinding ImageSource,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}">
                     <MenuItem.Icon>
                         <Path
                             Data="{StaticResource PanoramaGeometry}"
@@ -626,7 +662,9 @@
                     CommandParameter="{CompiledBinding FileInfo.FullName,
                                                        FallbackValue=''}"
                     Header="{CompiledBinding Center,
-                                             Mode=OneWay}">
+                                             Mode=OneWay}"
+                    IsEnabled="{CompiledBinding ImageSource,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}">
                     <MenuItem.Icon>
                         <Path
                             Data="{StaticResource PanoramaGeometry}"
@@ -643,7 +681,9 @@
                     CommandParameter="{CompiledBinding FileInfo.FullName,
                                                        FallbackValue=''}"
                     Header="{CompiledBinding Tile,
-                                             Mode=OneWay}">
+                                             Mode=OneWay}"
+                    IsEnabled="{CompiledBinding ImageSource,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}">
                     <MenuItem.Icon>
                         <Path
                             Data="{StaticResource PanoramaGeometry}"
@@ -705,7 +745,9 @@
                     CommandParameter="{CompiledBinding FileInfo.FullName,
                                                        FallbackValue=''}"
                     Header="{CompiledBinding FileProperties,
-                                             Mode=OneWay}">
+                                             Mode=OneWay}"
+                    IsEnabled="{CompiledBinding FileInfo,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}">
                     <MenuItem.Icon>
                         <Path
                             Data="{StaticResource FilePropertiesGeometry}"
@@ -739,7 +781,12 @@
                 <Separator />
 
                 <!--  Optimize image  -->
-                <MenuItem Command="{CompiledBinding OptimizeImageCommand}" Header="{CompiledBinding OptimizeImage, Mode=OneWay}">
+                <MenuItem
+                    Command="{CompiledBinding OptimizeImageCommand}"
+                    Header="{CompiledBinding OptimizeImage,
+                                             Mode=OneWay}"
+                    IsEnabled="{CompiledBinding ShouldOptimizeImageBeEnabled,
+                                                Mode=OneWay}">
                     <MenuItem.Icon>
                         <Image
                             Height="12"
@@ -755,6 +802,8 @@
                     Command="{CompiledBinding CropCommand}"
                     Header="{CompiledBinding Crop,
                                              Mode=OneWay}"
+                    IsEnabled="{CompiledBinding ShouldCropBeEnabled,
+                                                Mode=OneWay}"
                     x:Name="CropMenuItem">
                     <MenuItem.Icon>
                         <Path
@@ -772,6 +821,8 @@
                 <MenuItem
                     Command="{CompiledBinding FlipCommand}"
                     Header="{CompiledBinding GetIsFlippedTranslation}"
+                    IsEnabled="{CompiledBinding ImageSource,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}"
                     StaysOpenOnClick="True">
                     <MenuItem.Icon>
                         <Path
@@ -792,6 +843,8 @@
                     Command="{CompiledBinding RotateLeftCommand}"
                     Header="{CompiledBinding RotateLeft,
                                              Mode=OneWay}"
+                    IsEnabled="{CompiledBinding ImageSource,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}"
                     StaysOpenOnClick="True">
                     <MenuItem.Icon>
                         <Path
@@ -808,6 +861,8 @@
                     Command="{CompiledBinding RotateRightCommand}"
                     Header="{CompiledBinding RotateRight,
                                              Mode=OneWay}"
+                    IsEnabled="{CompiledBinding ImageSource,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}"
                     StaysOpenOnClick="True">
                     <MenuItem.Icon>
                         <Path
@@ -828,7 +883,9 @@
                 CommandParameter="{CompiledBinding FileInfo.FullName,
                                                    FallbackValue=''}"
                 Header="{CompiledBinding DeleteFile,
-                                         Mode=OneWay}">
+                                         Mode=OneWay}"
+                IsEnabled="{CompiledBinding FileInfo,
+                                            Converter={x:Static ObjectConverters.IsNotNull}}">
                 <MenuItem.Icon>
                     <Path
                         Data="{StaticResource RecycleGeometry}"
@@ -870,7 +927,12 @@
                 </MenuItem.Icon>
 
                 <!--  Copy image  -->
-                <MenuItem Command="{CompiledBinding CopyImageCommand}" Header="{CompiledBinding CopyImage, Mode=OneWay}">
+                <MenuItem
+                    Command="{CompiledBinding CopyImageCommand}"
+                    Header="{CompiledBinding CopyImage,
+                                             Mode=OneWay}"
+                    IsEnabled="{CompiledBinding ImageSource,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}">
                     <MenuItem.Icon>
                         <Path
                             Data="M384 336H192c-8.8 0-16-7.2-16-16V64c0-8.8 7.2-16 16-16l140.1 0L400 115.9V320c0 8.8-7.2 16-16 16zM192 384H384c35.3 0 64-28.7 64-64V115.9c0-12.7-5.1-24.9-14.1-33.9L366.1 14.1c-9-9-21.2-14.1-33.9-14.1H192c-35.3 0-64 28.7-64 64V320c0 35.3 28.7 64 64 64zM64 128c-35.3 0-64 28.7-64 64V448c0 35.3 28.7 64 64 64H256c35.3 0 64-28.7 64-64V416H272v32c0 8.8-7.2 16-16 16H64c-8.8 0-16-7.2-16-16V192c0-8.8 7.2-16 16-16H96V128H64z"
@@ -886,7 +948,9 @@
                     Command="{CompiledBinding CopyFilePathCommand}"
                     CommandParameter="{CompiledBinding FileInfo.FullName,
                                                        FallbackValue=''}"
-                    Header="{Binding FileCopyPath, Mode=OneWay}">
+                    Header="{Binding FileCopyPath, Mode=OneWay}"
+                    IsEnabled="{CompiledBinding FileInfo,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}">
                     <MenuItem.Icon>
                         <Path
                             Data="{StaticResource CopyGeometry}"
@@ -898,7 +962,12 @@
                 </MenuItem>
 
                 <!--  Copy base64  -->
-                <MenuItem Command="{CompiledBinding CopyBase64Command}" CommandParameter="{CompiledBinding FileInfo.FullName, FallbackValue=''}">
+                <MenuItem
+                    Command="{CompiledBinding CopyBase64Command}"
+                    CommandParameter="{CompiledBinding FileInfo.FullName,
+                                                       FallbackValue=''}"
+                    IsEnabled="{CompiledBinding FileInfo,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}">
                     <MenuItem.Header>
                         <TextBlock>
                             <Run Text="{CompiledBinding Copy, Mode=OneWay}" />
@@ -923,7 +992,9 @@
                     CommandParameter="{CompiledBinding FileInfo.FullName,
                                                        FallbackValue=''}"
                     Header="{CompiledBinding DuplicateFile,
-                                             Mode=OneWay}">
+                                             Mode=OneWay}"
+                    IsEnabled="{CompiledBinding FileInfo,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}">
                     <MenuItem.Icon>
                         <Path
                             Data="M448 384H256c-35.3 0-64-28.7-64-64V64c0-35.3 28.7-64 64-64H396.1c12.7 0 24.9 5.1 33.9 14.1l67.9 67.9c9 9 14.1 21.2 14.1 33.9V320c0 35.3-28.7 64-64 64zM64 128h96v48H64c-8.8 0-16 7.2-16 16V448c0 8.8 7.2 16 16 16H256c8.8 0 16-7.2 16-16V416h48v32c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V192c0-35.3 28.7-64 64-64z"
@@ -959,7 +1030,9 @@
                 CommandParameter="{CompiledBinding FileInfo.FullName,
                                                    FallbackValue=''}"
                 Header="{CompiledBinding CopyFile,
-                                         Mode=OneWay}">
+                                         Mode=OneWay}"
+                IsEnabled="{CompiledBinding FileInfo,
+                                            Converter={x:Static ObjectConverters.IsNotNull}}">
                 <MenuItem.Icon>
                     <Path
                         Data="{StaticResource CopyGeometry}"

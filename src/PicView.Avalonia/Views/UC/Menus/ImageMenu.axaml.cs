@@ -40,7 +40,7 @@ public partial class ImageMenu  : AnimatedMenu
             return;
         }
 
-        CropButton.IsEnabled = CropFunctions.DetermineIfShouldBeEnabled(vm);
+        CropFunctions.DetermineIfShouldBeEnabled(vm);
     }
 
     private async Task GoToPicBox_OnKeyDown(KeyEventArgs e)

@@ -18,7 +18,8 @@
                 Command="{CompiledBinding NextCommand}"
                 Header="{CompiledBinding NextImage,
                                          Mode=OneWay}"
-                IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
+                IsEnabled="{CompiledBinding FileInfo,
+                                            Converter={x:Static ObjectConverters.IsNotNull}}"
                 StaysOpenOnClick="True">
                 <MenuItem.Icon>
                     <Image
@@ -33,7 +34,8 @@
                 Command="{CompiledBinding PreviousCommand}"
                 Header="{CompiledBinding PrevImage,
                                          Mode=OneWay}"
-                IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
+                IsEnabled="{CompiledBinding FileInfo,
+                                            Converter={x:Static ObjectConverters.IsNotNull}}"
                 StaysOpenOnClick="True">
                 <MenuItem.Icon>
                     <Image
@@ -51,7 +53,8 @@
                 Command="{CompiledBinding Skip10Command}"
                 Header="{CompiledBinding AdvanceBy10Images,
                                          Mode=OneWay}"
-                IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
+                IsEnabled="{CompiledBinding FileInfo,
+                                            Converter={x:Static ObjectConverters.IsNotNull}}"
                 StaysOpenOnClick="True">
                 <MenuItem.Icon>
                     <Image
@@ -66,7 +69,8 @@
                 Command="{CompiledBinding Skip100Command}"
                 Header="{CompiledBinding AdvanceBy100Images,
                                          Mode=OneWay}"
-                IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
+                IsEnabled="{CompiledBinding FileInfo,
+                                            Converter={x:Static ObjectConverters.IsNotNull}}"
                 StaysOpenOnClick="True">
                 <MenuItem.Icon>
                     <Image
@@ -81,7 +85,8 @@
                 Command="{CompiledBinding Prev10Command}"
                 Header="{CompiledBinding GoBackBy10Images,
                                          Mode=OneWay}"
-                IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
+                IsEnabled="{CompiledBinding FileInfo,
+                                            Converter={x:Static ObjectConverters.IsNotNull}}"
                 StaysOpenOnClick="True">
                 <MenuItem.Icon>
                     <Image
@@ -96,7 +101,8 @@
                 Command="{CompiledBinding Prev100Command}"
                 Header="{CompiledBinding GoBackBy100Images,
                                          Mode=OneWay}"
-                IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
+                IsEnabled="{CompiledBinding FileInfo,
+                                            Converter={x:Static ObjectConverters.IsNotNull}}"
                 StaysOpenOnClick="True">
                 <MenuItem.Icon>
                     <Image
@@ -109,22 +115,29 @@
             <Separator />
 
             <!--  First Image  -->
-            <MenuItem Command="{CompiledBinding FirstCommand}" Header="{CompiledBinding FirstImage}">
+            <MenuItem
+                Command="{CompiledBinding FirstCommand}"
+                Header="{CompiledBinding FirstImage}"
+                IsEnabled="{CompiledBinding FileInfo,
+                                            Converter={x:Static ObjectConverters.IsNotNull}}">
                 <MenuItem.Icon>
                     <Image
                         Height="12"
-                        IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
                         Source="{StaticResource FirstImage}"
                         Width="12" />
                 </MenuItem.Icon>
             </MenuItem>
 
             <!--  Last Image  -->
-            <MenuItem Command="{CompiledBinding LastCommand}" Header="{CompiledBinding LastImage, Mode=OneWay}">
+            <MenuItem
+                Command="{CompiledBinding LastCommand}"
+                Header="{CompiledBinding LastImage,
+                                         Mode=OneWay}"
+                IsEnabled="{CompiledBinding FileInfo,
+                                            Converter={x:Static ObjectConverters.IsNotNull}}">
                 <MenuItem.Icon>
                     <Image
                         Height="12"
-                        IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
                         Source="{StaticResource LastImage}"
                         Width="12" />
                 </MenuItem.Icon>
@@ -133,7 +146,12 @@
             <Separator />
 
             <!--  Next folder  -->
-            <MenuItem Command="{CompiledBinding NextFolderCommand}" Header="{CompiledBinding NextFolder, Mode=OneWay}">
+            <MenuItem
+                Command="{CompiledBinding NextFolderCommand}"
+                Header="{CompiledBinding NextFolder,
+                                         Mode=OneWay}"
+                IsEnabled="{CompiledBinding FileInfo,
+                                            Converter={x:Static ObjectConverters.IsNotNull}}">
                 <MenuItem.Icon>
                     <Image
                         Height="14"
@@ -143,7 +161,12 @@
             </MenuItem>
 
             <!--  Prev folder  -->
-            <MenuItem Command="{CompiledBinding PreviousFolderCommand}" Header="{CompiledBinding PrevFolder, Mode=OneWay}">
+            <MenuItem
+                Command="{CompiledBinding PreviousFolderCommand}"
+                Header="{CompiledBinding PrevFolder,
+                                         Mode=OneWay}"
+                IsEnabled="{CompiledBinding FileInfo,
+                                            Converter={x:Static ObjectConverters.IsNotNull}}">
                 <MenuItem.Icon>
                     <Image
                         Height="14"
@@ -247,7 +270,8 @@
                     Height="25"
                     IconHeight="20"
                     IconWidth="17"
-                    IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
+                    IsEnabled="{CompiledBinding FileInfo,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}"
                     IsTabStop="False"
                     Width="90"
                     x:Name="PreviousButton" />
@@ -264,7 +288,8 @@
                     Height="25"
                     IconHeight="20"
                     IconWidth="17"
-                    IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
+                    IsEnabled="{CompiledBinding FileInfo,
+                                                Converter={x:Static ObjectConverters.IsNotNull}}"
                     IsTabStop="False"
                     Width="90"
                     x:Name="NextButton" />

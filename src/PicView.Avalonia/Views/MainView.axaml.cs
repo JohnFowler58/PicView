@@ -4,6 +4,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using PicView.Avalonia.Converters;
 using PicView.Avalonia.Crop;
 using PicView.Avalonia.DragAndDrop;
 using PicView.Avalonia.Input;
@@ -47,6 +48,7 @@ public partial class MainView : UserControl
             }
             HideInterfaceLogic.AddHoverButtonEvents(AltButtonsPanel, vm);
             PointerWheelChanged += async (_, e) => await vm.ImageViewer.PreviewOnPointerWheelChanged(this, e);
+            
             
         };
     }
@@ -93,6 +95,7 @@ public partial class MainView : UserControl
         }
 
         CropMenuItem.IsEnabled = CropFunctions.DetermineIfShouldBeEnabled(vm);
+        ConversionHelper.DetermineIfOptimizeImageShouldBeEnabled(vm);
 
         // Set source for ChangeCtrlZoomImage
         // TODO should probably be refactored inside a command (It doesn't update the UI in the zoom view, so should be made into a command)

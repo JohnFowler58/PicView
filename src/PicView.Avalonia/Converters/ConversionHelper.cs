@@ -1,4 +1,5 @@
 ﻿using ImageMagick;
+using PicView.Avalonia.ViewModels;
 using PicView.Core.FileHandling;
 using PicView.Core.ImageDecoding;
 
@@ -68,5 +69,26 @@ internal static class ConversionHelper
 
         FileDeletionHelper.DeleteFileWithErrorMsg(oldPath, false);
         return newPath;
+    }
+    
+    public static void DetermineIfOptimizeImageShouldBeEnabled(MainViewModel vm)
+    {
+        if (vm.FileInfo is null)
+        {
+            vm.ShouldOptimizeImageBeEnabled = false;
+            return;
+        }
+
+        if (vm.FileInfo.Extension.Equals(".jpg", StringComparison.InvariantCultureIgnoreCase)
+            || vm.FileInfo.Extension.Equals(".jpeg", StringComparison.InvariantCultureIgnoreCase)
+            || vm.FileInfo.Extension.Equals(".png", StringComparison.InvariantCultureIgnoreCase)
+            || vm.FileInfo.Extension.Equals(".gif", StringComparison.InvariantCultureIgnoreCase))
+        {
+            vm.ShouldOptimizeImageBeEnabled = true;
+        }
+        else
+        {
+            vm.ShouldOptimizeImageBeEnabled = false;
+        }
     }
 }
