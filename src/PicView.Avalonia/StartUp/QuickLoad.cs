@@ -85,7 +85,7 @@ public static class QuickLoad
         vm.IsLoading = false;
         
         NavigationManager.InitializeImageIterator(vm);
-        vm.GetIndex = NavigationManager.GetNonZeroIndex;
+        vm.AreNavigationButtonsEnabled = true;
         
         if (Settings.ImageScaling.ShowImageSideBySide)
         {
@@ -148,6 +148,7 @@ public static class QuickLoad
         }
 
         vm.ExifOrientation = imageModel.EXIFOrientation;
+        vm.GetIndex = NavigationManager.GetNonZeroIndex;
         
         // Add recent files, except when browsing archive
         if (string.IsNullOrWhiteSpace(TempFileHelper.TempFilePath))

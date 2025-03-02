@@ -422,6 +422,7 @@
                     Command="{CompiledBinding NextCommand}"
                     Header="{CompiledBinding NextImage,
                                              Mode=OneWay}"
+                    IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
                     StaysOpenOnClick="True">
                     <MenuItem.Icon>
                         <Image
@@ -437,6 +438,7 @@
                     Header="{CompiledBinding PrevImage,
                                              Mode=OneWay}"
                     StaysOpenOnClick="True">
+                    IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
                     <MenuItem.Icon>
                         <Image
                             Height="12"
@@ -452,6 +454,7 @@
                     Command="{CompiledBinding Skip10Command}"
                     Header="{CompiledBinding AdvanceBy10Images,
                                              Mode=OneWay}"
+                    IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
                     StaysOpenOnClick="True">
                     <MenuItem.Icon>
                         <Image
@@ -466,6 +469,7 @@
                     Command="{CompiledBinding Skip100Command}"
                     Header="{CompiledBinding AdvanceBy100Images,
                                              Mode=OneWay}"
+                    IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
                     StaysOpenOnClick="True">
                     <MenuItem.Icon>
                         <Image
@@ -480,6 +484,7 @@
                     Command="{CompiledBinding Prev10Command}"
                     Header="{CompiledBinding GoBackBy10Images,
                                              Mode=OneWay}"
+                    IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
                     StaysOpenOnClick="True">
                     <MenuItem.Icon>
                         <Image
@@ -494,6 +499,7 @@
                     Command="{CompiledBinding Prev100Command}"
                     Header="{CompiledBinding GoBackBy100Images,
                                              Mode=OneWay}"
+                    IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
                     StaysOpenOnClick="True">
                     <MenuItem.Icon>
                         <Image

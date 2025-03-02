@@ -18,6 +18,7 @@
                 Command="{CompiledBinding NextCommand}"
                 Header="{CompiledBinding NextImage,
                                          Mode=OneWay}"
+                IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
                 StaysOpenOnClick="True">
                 <MenuItem.Icon>
                     <Image
@@ -32,6 +33,7 @@
                 Command="{CompiledBinding PreviousCommand}"
                 Header="{CompiledBinding PrevImage,
                                          Mode=OneWay}"
+                IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
                 StaysOpenOnClick="True">
                 <MenuItem.Icon>
                     <Image
@@ -49,6 +51,7 @@
                 Command="{CompiledBinding Skip10Command}"
                 Header="{CompiledBinding AdvanceBy10Images,
                                          Mode=OneWay}"
+                IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
                 StaysOpenOnClick="True">
                 <MenuItem.Icon>
                     <Image
@@ -63,6 +66,7 @@
                 Command="{CompiledBinding Skip100Command}"
                 Header="{CompiledBinding AdvanceBy100Images,
                                          Mode=OneWay}"
+                IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
                 StaysOpenOnClick="True">
                 <MenuItem.Icon>
                     <Image
@@ -77,6 +81,7 @@
                 Command="{CompiledBinding Prev10Command}"
                 Header="{CompiledBinding GoBackBy10Images,
                                          Mode=OneWay}"
+                IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
                 StaysOpenOnClick="True">
                 <MenuItem.Icon>
                     <Image
@@ -91,6 +96,7 @@
                 Command="{CompiledBinding Prev100Command}"
                 Header="{CompiledBinding GoBackBy100Images,
                                          Mode=OneWay}"
+                IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
                 StaysOpenOnClick="True">
                 <MenuItem.Icon>
                     <Image
@@ -107,6 +113,7 @@
                 <MenuItem.Icon>
                     <Image
                         Height="12"
+                        IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
                         Source="{StaticResource FirstImage}"
                         Width="12" />
                 </MenuItem.Icon>
@@ -117,6 +124,7 @@
                 <MenuItem.Icon>
                     <Image
                         Height="12"
+                        IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
                         Source="{StaticResource LastImage}"
                         Width="12" />
                 </MenuItem.Icon>
@@ -239,6 +247,7 @@
                     Height="25"
                     IconHeight="20"
                     IconWidth="17"
+                    IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
                     IsTabStop="False"
                     Width="90"
                     x:Name="PreviousButton" />
@@ -255,6 +264,7 @@
                     Height="25"
                     IconHeight="20"
                     IconWidth="17"
+                    IsEnabled="{CompiledBinding AreNavigationButtonsEnabled}"
                     IsTabStop="False"
                     Width="90"
                     x:Name="NextButton" />

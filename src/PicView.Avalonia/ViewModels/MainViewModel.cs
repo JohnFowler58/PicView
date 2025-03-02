@@ -482,6 +482,12 @@ public class MainViewModel : ViewModelBase
     #region Fields
 
     #region Booleans
+    
+    public bool AreNavigationButtonsEnabled
+    {
+        get;
+        set => this.RaiseAndSetIfChanged(ref field, value);
+    }
 
     public bool IsAvoidingZoomingOut
     {

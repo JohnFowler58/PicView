@@ -972,7 +972,8 @@ public static class NavigationManager
         
             UpdateImage.SetStats(vm, index, imageModel);
         }
-        
+
+        vm.AreNavigationButtonsEnabled = true;
         vm.IsLoading = false;
         await CheckAndReloadGallery(fileInfo, vm);
     }
