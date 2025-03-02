@@ -86,16 +86,8 @@ public static class WindowResizing
         vm.ImageWidth = size.Width;
         vm.SecondaryImageWidth = size.SecondaryWidth;
         vm.ImageHeight = size.Height;
-        if (NavigationManager.CanNavigate(vm))
-        {
-            vm.GalleryMargin = new Thickness(0, 0, 0, size.Margin);
-        }
-        else
-        {
-            vm.GalleryMargin = new Thickness(0, 0, 0, 0);
-        }
+        vm.GalleryMargin = new Thickness(0, 0, 0, size.Margin);
         
-
         vm.ScrollViewerWidth = size.ScrollViewerWidth;
         vm.ScrollViewerHeight = size.ScrollViewerHeight;
 
