@@ -341,13 +341,6 @@ public static class NavigationManager
         vm.IsLoading = true;
         SetTitleHelper.SetLoadingTitle(vm);
 
-        if (_cancellationTokenSource is not null)
-        {
-            await _cancellationTokenSource.CancelAsync().ConfigureAwait(false);
-        }
-
-        _cancellationTokenSource = new CancellationTokenSource();
-
         // Starting in new task makes it more responsive and works better
         await Task.Run(async () =>
         {
@@ -597,11 +590,17 @@ public static class NavigationManager
     /// <returns>A task representing the asynchronous operation.</returns>
     public static async Task LoadPicFromBase64Async(string base64, MainViewModel vm)
     {
-        _imageIterator = null;
-        vm.ImageSource = null;
-        vm.IsLoading = true;
         SetTitleHelper.SetLoadingTitle(vm);
+        vm.IsLoading = true;
+        vm.ImageSource = null;
         vm.FileInfo = null;
+        
+        if (_cancellationTokenSource is not null)
+        {
+            await _cancellationTokenSource.CancelAsync();
+        }
+        await DisposeImageIteratorAsync();
+
         await Task.Run(async () =>
         {
             // TODO: Handle base64 if it's SVG image

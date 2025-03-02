@@ -716,7 +716,7 @@ public class ImageIterator : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         await ClearAsync().ConfigureAwait(false);
-        Dispose(false, true);
+        Dispose(true, true);
     }
 
     private void Dispose(bool disposing, bool cleared = false)

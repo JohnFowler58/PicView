@@ -227,6 +227,7 @@ public static class UpdateImage
             name,
             vm,
             async (action, priority) => { await Dispatcher.UIThread.InvokeAsync(action, priority); });
+        await NavigationManager.DisposeImageIteratorAsync();
     }
 
     /// <summary>
