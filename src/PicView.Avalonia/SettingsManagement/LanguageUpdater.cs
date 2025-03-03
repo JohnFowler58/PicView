@@ -25,7 +25,7 @@ public static class LanguageUpdater
         vm.GetIsScrollingTranslation = Settings.Zoom.ScrollEnabled ?
             TranslationHelper.Translation.ScrollingEnabled : TranslationHelper.Translation.ScrollingDisabled;
         
-        vm.GetIsShowingBottomGalleryTranslation = vm.IsGalleryShown ?
+        vm.GetIsShowingBottomGalleryTranslation = Settings.Gallery.IsBottomGalleryShown ?
             TranslationHelper.Translation.HideBottomGallery :
             TranslationHelper.Translation.ShowBottomGallery;
         
