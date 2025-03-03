@@ -117,8 +117,37 @@ public static class WindowFunctions
             vm.IsAutoFit = true;
         }
 
-        WindowResizing.SetSize(vm);
-        await Dispatcher.UIThread.InvokeAsync(() => CenterWindowOnScreen(false));
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            if (Settings.WindowProperties.AutoFit)
+            {
+                if (vm.PixelWidth > UIHelper.GetMainView.Bounds.Width || vm.PixelHeight > UIHelper.GetMainView.Bounds.Height)
+                {
+                    vm.ImageViewer.MainBorder.Height = double.NaN;
+                    vm.ImageViewer.MainBorder.Width = double.NaN;
+
+                    WindowResizing.SetSize(1, 1, 0, 0, 0, vm);
+                }
+                else
+                {
+                    WindowResizing.SetSize(vm);
+                }
+                CenterWindowOnScreen(false);
+            }
+            else
+            {
+                WindowResizing.SetSize(vm);
+            }
+            
+            if (Settings.WindowProperties.AutoFit)
+            {
+                if (vm.PixelWidth > UIHelper.GetMainView.Bounds.Width || vm.PixelHeight > UIHelper.GetMainView.Bounds.Height)
+                {
+                    Dispatcher.UIThread.Post(() => WindowResizing.SetSize(vm), DispatcherPriority.Render);
+                }
+            }
+        }, DispatcherPriority.Send);
+
         await SaveSettingsAsync().ConfigureAwait(false);
     }
 
