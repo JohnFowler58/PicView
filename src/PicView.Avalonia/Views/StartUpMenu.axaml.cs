@@ -126,9 +126,18 @@ public partial class StartUpMenu : UserControl
                 break;
         }
 
-        vm.TitleMaxWidth = ImageSizeCalculationHelper.GetTitleMaxWidth(vm.RotationAngle, width, height,
+        var titleMaxWidth = ImageSizeCalculationHelper.GetTitleMaxWidth(vm.RotationAngle, width, height,
             desktop.MainWindow.MinWidth, desktop.MainWindow.MinHeight, ImageSizeCalculationHelper.GetInterfaceSize(),
             desktop.MainWindow.Width);
+
+        if (Settings.Zoom.ScrollEnabled)
+        {
+            vm.TitleMaxWidth = titleMaxWidth - SizeDefaults.ScrollbarSize;
+        }
+        else
+        {
+            vm.TitleMaxWidth = titleMaxWidth;
+        }
         
         return;
 

@@ -178,8 +178,7 @@ public static class StartUpHelper
         {
             if (string.IsNullOrWhiteSpace(Settings.StartUp.LastFile))
             {
-                vm.CurrentView = new StartUpMenu();
-                vm.IsLoading = false;
+                ErrorHandling.ShowStartUpMenu(vm);
             }
             else
             {
@@ -189,8 +188,7 @@ public static class StartUpHelper
         }
         else
         {
-            vm.CurrentView = new StartUpMenu();
-            vm.IsLoading = false;
+            ErrorHandling.ShowStartUpMenu(vm);
         }
     }
 
