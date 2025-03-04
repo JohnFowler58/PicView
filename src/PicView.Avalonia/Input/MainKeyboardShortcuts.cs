@@ -110,15 +110,6 @@ public static class MainKeyboardShortcuts
         {
             CurrentKeys = new KeyGesture(e.Key);
         }
-        
-        // Handle custom keybindings
-        if (_x >= ushort.MaxValue - 1)
-        {
-            _x = 1;
-        }
-        _x++;
-        IsKeyHeldDown = _x > 1;
-        
         if (CropFunctions.IsCropping)
         {
             if (UIHelper.GetMainView.MainGrid.DataContext is MainViewModel { CurrentView: CropControl cropControl })
@@ -153,6 +144,13 @@ public static class MainKeyboardShortcuts
             // Execute the associated action
             await func.Invoke().ConfigureAwait(false);
         }
+        
+        if (_x >= ushort.MaxValue - 1)
+        {
+            _x = 1;
+        }
+        _x++;
+        IsKeyHeldDown = _x > 1;
     }
 
     /// <summary>
