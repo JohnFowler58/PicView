@@ -28,7 +28,7 @@ public partial class StartUpMenu : UserControl
                 return;
 
             var selectFileBrush = brush as SolidColorBrush;
-            selectFileBrush.Color = ColorManager.GetPrimaryAccentColor;
+            selectFileBrush.Color = ColorManager.PrimaryAccentColor;
         };
 
         SelectFileButton.PointerExited += (_, _) =>
@@ -49,7 +49,7 @@ public partial class StartUpMenu : UserControl
                 return;
 
             var selectFileBrush = brush as SolidColorBrush;
-            selectFileBrush.Color = ColorManager.GetPrimaryAccentColor;
+            selectFileBrush.Color = ColorManager.PrimaryAccentColor;
         };
 
         OpenLastFileButton.PointerExited += (_, _) =>
@@ -70,7 +70,7 @@ public partial class StartUpMenu : UserControl
                 return;
 
             var selectFileBrush = brush as SolidColorBrush;
-            selectFileBrush.Color = ColorManager.GetPrimaryAccentColor;
+            selectFileBrush.Color = ColorManager.PrimaryAccentColor;
         };
 
         PasteButton.PointerExited += (_, _) =>

@@ -8,74 +8,133 @@ namespace PicView.Avalonia.ColorManagement;
 /// </summary>
 public static class ColorManager
 {
-    /// <summary>
-    /// Gets the logo accent color based on the current color theme.
-    /// </summary>
-    /// <value>
-    /// A <see cref="Color"/> value representing the logo accent color.
-    /// </value>
-    public static Color GetLogoAccentColor => Settings.Theme.ColorTheme switch
+    // Define color theme constants for better readability
+    private const int Blue = 0;
+    private const int Pink = 2;
+    private const int Orange = 3;
+    private const int Green = 4;
+    private const int Red = 5;
+    private const int Teal = 6;
+    private const int Aqua = 7;
+    private const int Golden = 8;
+    private const int Purple = 9;
+    private const int Cyan = 10;
+    private const int Magenta = 11;
+    private const int Lime = 12;
+    
+    // Color definitions for each theme
+    private static readonly Dictionary<int, ThemeColors> ThemeColorMap = new()
     {
-        0 => Settings.Theme.Dark ? Color.FromRgb(255, 240, 90) : Color.FromRgb(225, 210, 80), // Blue
-        2 => Settings.Theme.Dark ? Color.FromRgb(255, 237, 38) : Color.FromRgb(250, 180, 38), // Pink
-        3 => Color.FromRgb(248, 175, 60), // Orange
-        4 => Settings.Theme.Dark ? Color.FromRgb(209, 237, 93) : Color.FromRgb(175, 157, 38), // Green
-        5 => Color.FromRgb(250, 192, 92), // Red
-        6 => Color.FromRgb(254, 172, 150), // Teal
-        7 => Color.FromRgb(228, 209, 17), // Aqua
-        8 => Settings.Theme.Dark ? Color.FromRgb(255, 253, 42) : Color.FromRgb(226, 180, 224), // Golden
-        9 => Settings.Theme.Dark ? Color.FromRgb(237, 184, 135) : Color.FromRgb(226, 141, 223), // Purple
-        10 => Settings.Theme.Dark ? Color.FromRgb(255, 253, 66) : Color.FromRgb(215, 200, 70), // Cyan
-        11 => Settings.Theme.Dark ? Color.FromRgb(255, 237, 38) : Color.FromRgb(226, 141, 223), // Magenta
-        12 => Color.FromRgb(255, 253, 42), // Lime
-        _ => throw new ArgumentOutOfRangeException(nameof(GetLogoAccentColor))
+        [Blue] = new ThemeColors(
+            logoLight: Color.FromRgb(225, 210, 80),
+            logoDark: Color.FromRgb(255, 240, 90),
+            primary: Color.FromRgb(26, 140, 240),
+            secondary: Color.FromArgb(242, 66, 163, 249)
+        ),
+        [Pink] = new ThemeColors(
+            logoLight: Color.FromRgb(250, 180, 38),
+            logoDark: Color.FromRgb(255, 237, 38),
+            primary: Color.FromRgb(255, 53, 197),
+            secondary: Color.FromArgb(230, 255, 98, 210)
+        ),
+        [Orange] = new ThemeColors(
+            logoLight: Color.FromRgb(248, 175, 60),
+            logoDark: Color.FromRgb(248, 175, 60),
+            primary: Color.FromRgb(219, 91, 61),
+            secondary: Color.FromArgb(242, 245, 121, 57)
+        ),
+        [Green] = new ThemeColors(
+            logoLight: Color.FromRgb(175, 157, 38),
+            logoDark: Color.FromRgb(209, 237, 93),
+            primary: Color.FromRgb(34, 203, 151),
+            secondary: Color.FromArgb(242, 80, 248, 196)
+        ),
+        [Red] = new ThemeColors(
+            logoLight: Color.FromRgb(250, 192, 92),
+            logoDark: Color.FromRgb(250, 192, 92),
+            primary: Color.FromRgb(249, 17, 16),
+            secondary: Color.FromArgb(242, 249, 61, 60)
+        ),
+        [Teal] = new ThemeColors(
+            logoLight: Color.FromRgb(254, 172, 150),
+            logoDark: Color.FromRgb(254, 172, 150),
+            primary: Color.FromRgb(68, 161, 160),
+            secondary: Color.FromArgb(242, 31, 174, 152)
+        ),
+        [Aqua] = new ThemeColors(
+            logoLight: Color.FromRgb(228, 209, 17),
+            logoDark: Color.FromRgb(228, 209, 17),
+            primary: Color.FromRgb(54, 230, 204),
+            secondary: Color.FromArgb(242, 121, 253, 233)
+        ),
+        [Golden] = new ThemeColors(
+            logoLight: Color.FromRgb(226, 180, 224),
+            logoDark: Color.FromRgb(255, 253, 42),
+            primary: Color.FromRgb(254, 169, 85),
+            secondary: Color.FromArgb(242, 249, 187, 125)
+        ),
+        [Purple] = new ThemeColors(
+            logoLight: Color.FromRgb(226, 141, 223),
+            logoDark: Color.FromRgb(237, 184, 135),
+            primary: Color.FromRgb(151, 56, 235),
+            secondary: Color.FromArgb(242, 194, 95, 255)
+        ),
+        [Cyan] = new ThemeColors(
+            logoLight: Color.FromRgb(215, 200, 70),
+            logoDark: Color.FromRgb(255, 253, 66),
+            primary: Color.FromRgb(27, 161, 226),
+            secondary: Color.FromArgb(242, 89, 186, 233)
+        ),
+        [Magenta] = new ThemeColors(
+            logoLight: Color.FromRgb(226, 141, 223),
+            logoDark: Color.FromRgb(255, 237, 38),
+            primary: Color.FromRgb(230, 139, 238),
+            secondary: Color.FromArgb(242, 255, 108, 212)
+        ),
+        [Lime] = new ThemeColors(
+            logoLight: Color.FromRgb(255, 253, 42),
+            logoDark: Color.FromRgb(255, 253, 42),
+            primary: Color.FromRgb(32, 231, 107),
+            secondary: Color.FromArgb(242, 97, 240, 151)
+        )
     };
 
     /// <summary>
-    /// Gets the secondary accent color based on the current color theme.
+    /// Gets the logo accent color based on the current color theme.
     /// </summary>
-    /// <value>
-    /// A <see cref="Color"/> value representing the secondary accent color.
-    /// </value>
-    public static Color GetSecondaryAccentColor => Settings.Theme.ColorTheme switch
-    {
-        0 => Color.FromArgb(0xF2, 0x0D, 0x80, 0xEE),  // Blue -> #F200ADEE
-        2 => Color.FromArgb(0xF2, 0xFF, 0x86, 0xDB),  // Pink -> #F2FF86DB
-        3 => Color.FromArgb(0xF2, 0xFF, 0x64, 0x41),  // Orange -> #F2FF6441
-        4 => Color.FromArgb(0xF2, 0x0D, 0x80, 0x39),  // Green -> #F20D8039
-        5 => Color.FromArgb(0xF2, 0xF3, 0x53, 0x53),  // Red -> #F2F35353
-        6 => Color.FromArgb(0xF2, 0x1F, 0xAE, 0x98),  // Teal -> #F21FAE98
-        7 => Color.FromArgb(0xF2, 0x09, 0xA6, 0x8E),  // Aqua -> #F209A68E
-        8 => Color.FromArgb(0xF2, 0xFE, 0xA9, 0x55),  // Golden -> #F2FEA955
-        9 => Color.FromArgb(0xF2, 0xA9, 0x53, 0xF5),  // Purple -> #F2A953F5
-        10 => Color.FromArgb(0xF2, 0x59, 0xBA, 0xE9), // Cyan -> #F259BAE9
-        11 => Color.FromArgb(0xF2, 0xFF, 0x6C, 0xD4), // Magenta -> #F2FF6CD4
-        12 => Color.FromArgb(0xF2, 0x22, 0xCB, 0x97), // Lime -> #F222CB97
-        _ => throw new ArgumentOutOfRangeException(nameof(GetSecondaryAccentColor))
-    };
+    public static Color LogoAccentColor => GetThemeColors().GetLogoColor(Settings.Theme.Dark);
+
+    /// <summary>
+    /// Gets the secondary accent color based on the current color theme.
+    /// A brighter shade of the primary accent color.
+    /// </summary>
+    public static Color SecondaryAccentColor => GetThemeColors().Secondary;
 
     /// <summary>
     /// Gets the primary accent color based on the current color theme.
     /// </summary>
-    /// <value>
-    /// A <see cref="Color"/> value representing the primary accent color.
-    /// </value>
-    public static Color GetPrimaryAccentColor => Settings.Theme.ColorTheme switch
+    public static Color PrimaryAccentColor => GetThemeColors().Primary;
+
+    /// <summary>
+    /// Gets the color set for the current theme
+    /// </summary>
+    private static ThemeColors GetThemeColors()
     {
-        0 => Color.FromRgb(26, 140, 240),  // Blue 
-        2 => Color.FromRgb(255, 53, 197),  // Pink
-        3 => Color.FromRgb(219, 91, 61),   // Orange
-        4 => Color.FromRgb(34, 203, 151),  // Green
-        5 => Color.FromRgb(249, 17, 16),   // Red
-        6 => Color.FromRgb(68, 161, 160),  // Teal
-        7 => Color.FromRgb(54, 230, 204),  // Aqua
-        8 => Color.FromRgb(254, 169, 85),  // Golden
-        9 => Color.FromRgb(151, 56, 235),  // Purple
-        10 => Color.FromRgb(27, 161, 226), // Cyan
-        11 => Color.FromRgb(230, 139, 238),// Magenta
-        12 => Color.FromRgb(32, 231, 107), // Lime
-        _ => throw new ArgumentOutOfRangeException(nameof(GetPrimaryAccentColor))
-    };
+        var themeIndex = Settings.Theme.ColorTheme;
+        
+        if (ThemeColorMap.TryGetValue(themeIndex, out var colors))
+        {
+            return colors;
+        }
+
+        if (themeIndex is 1)
+        {
+            return ThemeColorMap[0];
+        }
+        
+        throw new ArgumentOutOfRangeException(nameof(Settings.Theme.ColorTheme), 
+            $"Color theme index {themeIndex} is not supported");
+    }
 
     /// <summary>
     /// Updates the accent colors in the application resources based on the selected color theme.
@@ -85,35 +144,45 @@ public static class ColorManager
     {
         Settings.Theme.ColorTheme = colorTheme;
 
-        var primaryAccentColor = GetPrimaryAccentColor;
-        var secondaryAccentColor = GetSecondaryAccentColor;
-        var logoAccentColor = GetLogoAccentColor;
-
-        var primaryBrush = new SolidColorBrush(primaryAccentColor);
-        var secondaryBrush = new SolidColorBrush(secondaryAccentColor);
-        var logoAccentBrush = new SolidColorBrush(logoAccentColor);
+        var primaryBrush = new SolidColorBrush(PrimaryAccentColor);
+        var secondaryBrush = new SolidColorBrush(SecondaryAccentColor);
+        var logoAccentBrush = new SolidColorBrush(LogoAccentColor);
         
         if (Settings.Theme.GlassTheme)
         {
             ThemeManager.GlassThemeUpdates();
         }
 
-        // Retrieve existing brushes and replace them
-        if (Application.Current.TryGetResource("AccentColor", Application.Current.RequestedThemeVariant, out _))
+        // Update application resources with the new brushes
+        UpdateResourceIfExists("AccentColor", primaryBrush);
+        UpdateResourceIfExists("SecondaryAccentColor", secondaryBrush);
+        UpdateResourceIfExists("LogoAccentColor", logoAccentBrush);
+    }
+    
+    /// <summary>
+    /// Updates a resource if it exists in the application resources
+    /// </summary>
+    private static void UpdateResourceIfExists(string resourceKey, object value)
+    {
+        if (Application.Current.TryGetResource(resourceKey, Application.Current.RequestedThemeVariant, out _))
         {
-            Application.Current.Resources["AccentColor"] = primaryBrush;
+            Application.Current.Resources[resourceKey] = value;
         }
+    }
+    
+    /// <summary>
+    /// Represents a set of colors for a theme
+    /// </summary>
+    private readonly struct ThemeColors(Color logoLight, Color logoDark, Color primary, Color secondary)
+    {
+        private Color LogoLight { get; } = logoLight;
+        private Color LogoDark { get; } = logoDark;
+        public Color Primary { get; } = primary;
+        public Color Secondary { get; } = secondary;
 
-        if (Application.Current.TryGetResource("SecondaryAccentColor", Application.Current.RequestedThemeVariant, out _))
-        {
-            Application.Current.Resources["SecondaryAccentColor"] = secondaryBrush;
-        }
-
-        if (Application.Current.TryGetResource("LogoAccentColor", Application.Current.RequestedThemeVariant, out _))
-        {
-            Application.Current.Resources["LogoAccentColor"] = logoAccentBrush;
-        }
-        
-        
+        /// <summary>
+        /// Gets the appropriate logo color based on dark mode setting
+        /// </summary>
+        public Color GetLogoColor(bool isDarkMode) => isDarkMode ? LogoDark : LogoLight;
     }
 }
