@@ -177,6 +177,15 @@
             <Setter Property="Opacity" Value="{DynamicResource ThemeDisabledOpacity}" />
         </Style>
 
+        <Style Selector="^.active /template/ Border#root">
+            <Setter Property="Background" Value="{DynamicResource AccentColor}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource AccentColor}" />
+        </Style>
+
+        <Style Selector="^.active /template/ ContentPresenter#PART_HeaderPresenter">
+            <Setter Property="Foreground" Value="{StaticResource SecondaryTextColor}" />
+        </Style>
+
 
     </ControlTheme>
 

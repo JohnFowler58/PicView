@@ -12,6 +12,7 @@ using PicView.Avalonia.ViewModels;
 using PicView.Core.ArchiveHandling;
 using PicView.Core.Calculations;
 using PicView.Core.FileHandling;
+using PicView.Core.Navigation;
 
 // ReSharper disable CompareOfFloatsByEqualityOperator
 
@@ -41,7 +42,7 @@ public static class WindowFunctions
         }
 
         var vm = window.DataContext as MainViewModel;
-        string lastFile;
+        string? lastFile;
         if (NavigationManager.CanNavigate(vm))
         {
             if (!string.IsNullOrEmpty(ArchiveExtraction.LastOpenedArchive))
@@ -50,20 +51,20 @@ public static class WindowFunctions
             }
             else
             {
-                lastFile = vm?.FileInfo?.FullName ?? FileHistoryNavigation.GetLastFile();
+                lastFile = vm?.FileInfo?.FullName ?? FileHistory.GetLastEntry();
             }
         }
         else
         {
             var url = vm?.Title.GetURL();
-            lastFile = !string.IsNullOrWhiteSpace(url) ? url : FileHistoryNavigation.GetLastFile();
+            lastFile = !string.IsNullOrWhiteSpace(url) ? url : FileHistory.GetLastEntry();
         }
 
         Settings.StartUp.LastFile = lastFile;
         await SaveSettingsAsync();
         await KeybindingManager.UpdateKeyBindingsFile(); // Save keybindings
         FileDeletionHelper.DeleteTempFiles();
-        FileHistoryNavigation.WriteToFile();
+        FileHistory.SaveToFile();
         ArchiveExtraction.Cleanup();
         Environment.Exit(0);
     }

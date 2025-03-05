@@ -579,7 +579,7 @@ public static class NavigationManager
         vm.IsLoading = false;
         vm.FileInfo = fileInfo;
         vm.ExifOrientation = imageModel.EXIFOrientation;
-        FileHistoryNavigation.Add(url);
+        FileHistory.Add(url);
 
         await DisposeImageIteratorAsync();
         
@@ -727,7 +727,7 @@ public static class NavigationManager
         await _imageIterator.DisposeAsync();
     }
     
-    public static bool IsCollectionEmpty => _imageIterator.ImagePaths is null || _imageIterator.ImagePaths.Count < 0;
+    public static bool IsCollectionEmpty => _imageIterator?.ImagePaths is null || _imageIterator?.ImagePaths?.Count < 0;
     public static List<string>? GetCollection => _imageIterator?.ImagePaths;
     
     public static void UpdateFileListAndIndex(List<string> fileList, int index) => _imageIterator?.UpdateFileListAndIndex(fileList, index);

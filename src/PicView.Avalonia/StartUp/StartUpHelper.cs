@@ -16,6 +16,7 @@ using PicView.Avalonia.Views;
 using PicView.Avalonia.WindowBehavior;
 using PicView.Core.Calculations;
 using PicView.Core.Gallery;
+using PicView.Core.Navigation;
 using PicView.Core.ProcessHandling;
 
 namespace PicView.Avalonia.StartUp;
@@ -117,6 +118,7 @@ public static class StartUpHelper
         ValidateGallerySettings(vm, settingsExists);
         SetWindowEventHandlers(window);
         MenuManager.AddMenus();
+        FileHistory.Initialize();
 
         Application.Current.Name = "PicView";
 

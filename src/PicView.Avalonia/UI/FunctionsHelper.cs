@@ -15,6 +15,7 @@ using PicView.Avalonia.ViewModels;
 using PicView.Avalonia.WindowBehavior;
 using PicView.Core.FileHandling;
 using PicView.Core.ImageDecoding;
+using PicView.Core.Navigation;
 using PicView.Core.ProcessHandling;
 
 namespace PicView.Avalonia.UI;
@@ -550,7 +551,7 @@ public static class FunctionsHelper
             return;
         }
 
-        await FileHistoryNavigation.OpenLastFileAsync(Vm).ConfigureAwait(false);
+        await NavigationManager.LoadPicFromStringAsync(FileHistory.GetLastEntry(), Vm).ConfigureAwait(false);
     }
 
     public static async Task OpenPreviousFileHistoryEntry()
@@ -560,7 +561,7 @@ public static class FunctionsHelper
             return;
         }
 
-        await FileHistoryNavigation.PrevAsync(Vm).ConfigureAwait(false);
+        await NavigationManager.LoadPicFromStringAsync(FileHistory.GetPreviousEntry(), Vm).ConfigureAwait(false);
     }
     public static async Task OpenNextFileHistoryEntry()
     {
@@ -569,7 +570,7 @@ public static class FunctionsHelper
             return;
         }
 
-        await FileHistoryNavigation.NextAsync(Vm).ConfigureAwait(false);
+        await NavigationManager.LoadPicFromStringAsync(FileHistory.GetNextEntry(), Vm).ConfigureAwait(false);
     }
     
     public static async Task Print()

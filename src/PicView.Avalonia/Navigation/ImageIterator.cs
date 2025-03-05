@@ -232,7 +232,7 @@ public class ImageIterator : IAsyncDisposable
                 PreLoader.Resynchronize(ImagePaths);
             }
             
-            FileHistoryNavigation.Remove(e.FullPath);
+            FileHistory.Remove(e.FullPath);
 
         }
         catch (Exception exception)
@@ -310,7 +310,7 @@ public class ImageIterator : IAsyncDisposable
             Resynchronize();
 
             _isRunning = false;
-            FileHistoryNavigation.Rename(e.OldFullPath, e.FullPath);
+            FileHistory.Rename(e.OldFullPath, e.FullPath);
             await Dispatcher.UIThread.InvokeAsync(() =>
                 GalleryFunctions.RenameGalleryItem(oldIndex, index, Path.GetFileNameWithoutExtension(e.Name), e.FullPath,
                     _vm));
@@ -609,7 +609,7 @@ public class ImageIterator : IAsyncDisposable
             // Add recent files, except when browsing archive
             if (string.IsNullOrWhiteSpace(TempFileHelper.TempFilePath) && ImagePaths.Count > CurrentIndex)
             {
-                FileHistoryNavigation.Add(ImagePaths[CurrentIndex]);
+                FileHistory.Add(ImagePaths[CurrentIndex]);
             }
         }
         catch (OperationCanceledException)
