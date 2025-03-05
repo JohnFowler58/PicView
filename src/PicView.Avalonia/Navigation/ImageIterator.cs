@@ -485,6 +485,29 @@ public class ImageIterator : IAsyncDisposable
     
     public async Task NextIteration(int iteration, CancellationTokenSource cts)
     {
+        // Handle side-by-side navigation
+        if (Settings.ImageScaling.ShowImageSideBySide)
+        {
+            // Handle properly navigating first or last image
+            if (iteration == GetCount - 1)
+            {
+                if (!Settings.UIProperties.Looping)
+                {
+                    return;
+                }
+
+                var targetIndex = IsReversed ? GetCount - 2 < 0 ? 0 : GetCount - 2 : 0;
+                await IterateToIndex(targetIndex, cts).ConfigureAwait(false);
+                return;
+            }
+
+            // Determine the next index based on navigation direction
+            var nextIndex = GetIteration(iteration, IsReversed ? NavigateTo.Previous : NavigateTo.Next);
+            await IterateToIndex(nextIndex, cts).ConfigureAwait(false);
+            return;
+        }
+
+        // When not showing side-by-side, decide based on keyboard state
         if (!MainKeyboardShortcuts.IsKeyHeldDown)
         {
             await IterateToIndex(iteration, cts).ConfigureAwait(false);
