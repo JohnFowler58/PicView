@@ -973,6 +973,11 @@ public static class NavigationManager
         }
 
         vm.IsLoading = false;
+        FileHistory.Add(_imageIterator.ImagePaths[index]);
+        if (Settings.ImageScaling.ShowImageSideBySide)
+        {
+            FileHistory.Add(_imageIterator.ImagePaths[_imageIterator.GetIteration(index, NavigateTo.Next)]);
+        }
         await CheckAndReloadGallery(fileInfo, vm);
     }
 

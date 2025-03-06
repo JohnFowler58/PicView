@@ -629,10 +629,14 @@ public class ImageIterator : IAsyncDisposable
 
             PreLoader.Add(index, ImagePaths, preloadValue?.ImageModel);
 
-            // Add recent files, except when browsing archive
+            // Add recent files
             if (string.IsNullOrWhiteSpace(TempFileHelper.TempFilePath) && ImagePaths.Count > CurrentIndex)
             {
                 FileHistory.Add(ImagePaths[CurrentIndex]);
+                if (Settings.ImageScaling.ShowImageSideBySide)
+                {
+                    FileHistory.Add(ImagePaths[GetIteration(index, IsReversed ? NavigateTo.Previous : NavigateTo.Next)]);
+                }
             }
         }
         catch (OperationCanceledException)
