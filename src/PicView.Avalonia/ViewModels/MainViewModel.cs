@@ -67,7 +67,7 @@ public class MainViewModel : ViewModelBase
 
         PreviousCommand = ReactiveCommand.Create(() => { Task.Run(FunctionsHelper.Prev); });
 
-        PreviousButtonCommand = ReactiveCommand.Create(()  => { UIHelper.PreviousButtonNavigation(this); });
+        PreviousButtonCommand = ReactiveCommand.Create(() => { UIHelper.PreviousButtonNavigation(this); });
 
         PreviousArrowButtonCommand = ReactiveCommand.Create(() => { UIHelper.PreviousArrowButtonNavigation(this); });
 
@@ -1485,7 +1485,7 @@ public class MainViewModel : ViewModelBase
 
     private async Task CutFileTask(string path) => await ClipboardHelper.CutFile(path, this);
 
-    private async Task DeleteFileTask(string path) =>
+    private static async Task DeleteFileTask(string path) =>
         await Task.Run(() => FileDeletionHelper.DeleteFileWithErrorMsg(path, false));
 
     private static async Task RecycleFileTask(string path) =>
@@ -1499,7 +1499,7 @@ public class MainViewModel : ViewModelBase
 
     private async Task PrintTask(string path) => await FileManager.Print(path, this).ConfigureAwait(false);
 
-    private async Task OpenWithTask(string path) => await FileManager.Print(path, this).ConfigureAwait(false);
+    private async Task OpenWithTask(string path) => await FileManager.OpenWith(path, this).ConfigureAwait(false);
 
     private async Task LocateOnDiskTask(string path) =>
         await FileManager.LocateOnDisk(path, this).ConfigureAwait(false);
