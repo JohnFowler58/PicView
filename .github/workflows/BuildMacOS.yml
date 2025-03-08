@@ -40,13 +40,20 @@ jobs:
             -outputPath "${{ github.workspace }}/Build/PicView-v${{steps.get-version.outputs.version}}-osx-arm64" `
             -appVersion "${{steps.get-version.outputs.version}}"
         shell: pwsh
-        
-      # Step 6: Create DMG for arm64
+      
+      # Step 6: Run fix_dylibs.sh script for arm64
+      - name: Run fix_dylibs script for arm64
+        run: |
+          chmod +x "${{ github.workspace }}/Build/PicView-v${{steps.get-version.outputs.version}}-osx-arm64/PicView.app/Contents/MacOS/fix_dylibs.sh"
+          cd "${{ github.workspace }}/Build/PicView-v${{steps.get-version.outputs.version}}-osx-arm64/PicView.app/Contents/MacOS/"
+          ./fix_dylibs.sh
+      
+      # Step 7: Create DMG for arm64
       - name: Create DMG for arm64
         run: |
           hdiutil create -volname "PicView" -srcfolder "${{ github.workspace }}/Build/PicView-v${{steps.get-version.outputs.version}}-osx-arm64/PicView.app" -ov -format UDZO "${{ github.workspace }}/Build/PicView-v${{steps.get-version.outputs.version}}-osx-arm64.dmg"
-        
-      # Step 7: Upload arm64 artifacts
+      
+      # Step 8: Upload arm64 artifacts
       - name: Upload arm64 artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -56,7 +63,7 @@ jobs:
             ${{ github.workspace }}/Build/PicView-v${{steps.get-version.outputs.version}}-osx-arm64.dmg
           retention-days: 14
 
-      # Step 8: Build x64 version
+      # Step 9: Build x64 version
       - name: Build x64 version
         run: |
           pwsh -File "${{ github.workspace }}/Build/Build Avalonia.MacOS.ps1" `
@@ -64,13 +71,20 @@ jobs:
             -outputPath "${{ github.workspace }}/Build/PicView-v${{steps.get-version.outputs.version}}-osx-x64" `
             -appVersion "${{steps.get-version.outputs.version}}"
         shell: pwsh
-        
-      # Step 9: Create DMG for x64
+      
+      # Step 10: Run fix_dylibs.sh script for x64
+      - name: Run fix_dylibs script for x64
+        run: |
+          chmod +x "${{ github.workspace }}/Build/PicView-v${{steps.get-version.outputs.version}}-osx-x64/PicView.app/Contents/MacOS/fix_dylibs.sh"
+          cd "${{ github.workspace }}/Build/PicView-v${{steps.get-version.outputs.version}}-osx-x64/PicView.app/Contents/MacOS/"
+          ./fix_dylibs.sh
+      
+      # Step 11: Create DMG for x64
       - name: Create DMG for x64
         run: |
           hdiutil create -volname "PicView" -srcfolder "${{ github.workspace }}/Build/PicView-v${{steps.get-version.outputs.version}}-osx-x64/PicView.app" -ov -format UDZO "${{ github.workspace }}/Build/PicView-v${{steps.get-version.outputs.version}}-osx-x64.dmg"
 
-      # Step 10: Upload x64 artifacts
+      # Step 12: Upload x64 artifacts
       - name: Upload x64 artifacts
         uses: actions/upload-artifact@v4
         with:
