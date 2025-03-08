@@ -1,5 +1,6 @@
 ﻿using Avalonia;
 using Avalonia.Media.Imaging;
+using PicView.Avalonia.ImageHandling;
 using PicView.Avalonia.UI;
 using PicView.Avalonia.ViewModels;
 using PicView.Avalonia.Views.UC;
@@ -76,6 +77,19 @@ public static class CropFunctions
         vm.CurrentView = vm.ImageViewer;
         IsCropping = false;
         SetTitleHelper.SetTitle(vm);
+        
+        // Reset image type to fix issue with animated images
+        switch (vm.ImageType)
+        {
+            case ImageType.AnimatedWebp:
+                vm.ImageType = ImageType.Bitmap;
+                vm.ImageType = ImageType.AnimatedWebp;
+                break;
+            case ImageType.AnimatedGif:
+                vm.ImageType = ImageType.Bitmap;
+                vm.ImageType = ImageType.AnimatedGif;
+                break;
+        }
     }
 
     public static bool DetermineIfShouldBeEnabled(MainViewModel vm)
