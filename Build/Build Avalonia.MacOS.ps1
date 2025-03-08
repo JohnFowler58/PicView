@@ -116,6 +116,46 @@ if (Test-Path $iconSource) {
     Copy-Item -Path $iconSource -Destination $resourcesPath
 }
 
+# Find and ensure Magick.Native is properly copied
+$magickNativeFile = if ($Platform -eq "arm64") { "Magick.Native-Q8-arm64.dylib" } else { "Magick.Native-Q8-x64.dylib" }
+
+# Check for Magick.Native in the temp build output
+$magickNativePath = Get-ChildItem -Path $tempBuildPath -Filter $magickNativeFile -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
+
+# If found in temp build path, make sure it's copied to MacOS folder and check permissions
+if ($magickNativePath) {
+    Write-Host "Found Magick.Native at $magickNativePath, ensuring it's in MacOS directory"
+    Copy-Item -Path $magickNativePath -Destination $macOSPath -Force
+} else {
+    # Try to find it elsewhere in the repository
+    $magickNativePath = Get-ChildItem -Path $PSScriptRoot -Filter $magickNativeFile -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty FullName
+    
+    if ($magickNativePath) {
+        Write-Host "Found Magick.Native at $magickNativePath, copying to MacOS directory"
+        Copy-Item -Path $magickNativePath -Destination $macOSPath -Force
+    } else {
+        Write-Warning "Could not find $magickNativeFile anywhere! App may not function correctly."
+        
+        # Last resort: try NuGet cache
+        $nugetCachePath = if ($env:HOME) { Join-Path $env:HOME ".nuget" } else { Join-Path $env:USERPROFILE ".nuget" }
+        if (Test-Path $nugetCachePath) {
+            $magickNativePaths = Get-ChildItem -Path $nugetCachePath -Filter $magickNativeFile -Recurse -ErrorAction SilentlyContinue
+            if ($magickNativePaths) {
+                $latestMagickNative = $magickNativePaths | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+                Write-Host "Found Magick.Native in NuGet cache at $($latestMagickNative.FullName), copying to MacOS directory"
+                Copy-Item -Path $latestMagickNative.FullName -Destination $macOSPath -Force
+            }
+        }
+    }
+}
+
+# After copying, verify the file exists in the MacOS directory
+if (Test-Path (Join-Path $macOSPath $magickNativeFile)) {
+    Write-Host "$magickNativeFile successfully copied to MacOS directory"
+} else {
+    Write-Warning "$magickNativeFile not found in MacOS directory after copy attempt"
+}
+
 # Remove PDB files
 Get-ChildItem -Path $macOSPath -Filter "*.pdb" -Recurse | Remove-Item -Force
 
@@ -129,6 +169,13 @@ if ($IsLinux -or $IsMacOS) {
         if ($_.Extension -in @('.dylib', '') -or $_.Name -eq 'PicView.Avalonia.MacOS') {
             chmod +x $_.FullName
         }
+    }
+    
+    # Specifically check for Magick.Native and ensure it's executable
+    $magickNativeInMacOS = Join-Path -Path $macOSPath -ChildPath $magickNativeFile
+    if (Test-Path $magickNativeInMacOS) {
+        Write-Host "Setting executable permission on $magickNativeInMacOS"
+        chmod +x $magickNativeInMacOS
     }
     
     # Set proper ownership and permissions for the entire .app bundle
