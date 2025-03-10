@@ -158,7 +158,7 @@ public class App : Application, IPlatformSpecificService
                 }       
             }
 
-            _ = FunctionsHelper.CloseMenus();
+            _ = FunctionsMapper.CloseMenus();
         }
     }
 
@@ -203,7 +203,7 @@ public class App : Application, IPlatformSpecificService
                 }      
             }
 
-            _ = FunctionsHelper.CloseMenus();
+            _ = FunctionsMapper.CloseMenus();
         }
     }
 
@@ -248,7 +248,7 @@ public class App : Application, IPlatformSpecificService
                 }      
             }
 
-            _ = FunctionsHelper.CloseMenus();
+            _ = FunctionsMapper.CloseMenus();
         }
     }
 
@@ -290,7 +290,7 @@ public class App : Application, IPlatformSpecificService
                     _settingsWindow.Show();
                 }     
             }
-            _= FunctionsHelper.CloseMenus();
+            _= FunctionsMapper.CloseMenus();
             
         }
     }
@@ -333,7 +333,7 @@ public class App : Application, IPlatformSpecificService
                     _effectsWindow.Show();
                 }   
             }
-            _= FunctionsHelper.CloseMenus();
+            _= FunctionsMapper.CloseMenus();
         }
     }
 
@@ -375,7 +375,7 @@ public class App : Application, IPlatformSpecificService
                     _singleImageResizeWindow.Show();
                 }  
             }
-            _= FunctionsHelper.CloseMenus();
+            _= FunctionsMapper.CloseMenus();
         }
     }
 
@@ -417,7 +417,7 @@ public class App : Application, IPlatformSpecificService
                     _batchResizeWindow.Show();
                 }  
             }
-            _= FunctionsHelper.CloseMenus();
+            _= FunctionsMapper.CloseMenus();
         }   
     }
 

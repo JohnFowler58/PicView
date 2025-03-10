@@ -5,6 +5,7 @@ using PicView.Avalonia.UI;
 using PicView.Avalonia.ViewModels;
 using PicView.Core.Calculations;
 using PicView.Core.Gallery;
+using PicView.Core.Navigation;
 using StartUpMenu = PicView.Avalonia.Views.StartUpMenu;
 
 namespace PicView.Avalonia.Navigation;
@@ -46,12 +47,12 @@ public static class ErrorHandling
             }
             else
             {
-                SetTitleHelper.SetNoImageTitle(vm);
+                TitleManager.SetNoImageTitle(vm);
             }
 
             vm.GalleryMode = GalleryMode.Closed;
             GalleryFunctions.Clear();
-            UIHelper.CloseMenus(vm);
+            MenuManager.CloseMenus(vm);
             vm.GalleryMargin = new Thickness(0, 0, 0, 0);
             vm.GetIndex = 0;
             vm.PlatformService.StopTaskbarProgress();
@@ -76,7 +77,7 @@ public static class ErrorHandling
         
         if (!NavigationManager.CanNavigate(vm))
         {
-            await FileHistoryNavigation.OpenLastFileAsync(vm);
+            await NavigationManager.LoadPicFromStringAsync(FileHistory.GetLastEntry(), vm).ConfigureAwait(false);
             return;
         }
         

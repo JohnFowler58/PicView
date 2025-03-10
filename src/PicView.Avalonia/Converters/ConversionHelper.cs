@@ -1,4 +1,6 @@
 ﻿using ImageMagick;
+using PicView.Avalonia.Navigation;
+using PicView.Avalonia.UI;
 using PicView.Avalonia.ViewModels;
 using PicView.Core.FileHandling;
 using PicView.Core.ImageDecoding;
@@ -7,7 +9,7 @@ namespace PicView.Avalonia.Converters;
 
 internal static class ConversionHelper
 {
-    internal static async Task<bool> ResizeImageByPercentage(FileInfo fileInfo, int selectedIndex)
+    public static async Task<bool> ResizeImageByPercentage(FileInfo fileInfo, int selectedIndex)
     {
         var percentage = 100 - selectedIndex * 5;
 
@@ -19,8 +21,22 @@ internal static class ConversionHelper
         var magickPercentage = new Percentage(percentage);
         return await SaveImageFileHelper.ResizeImageAsync(fileInfo, 0, 0, 100, magickPercentage).ConfigureAwait(false);
     }
+    
+    public static async Task ResizeImageByPercentage(int percentage, MainViewModel vm)
+    {
+        TitleManager.SetLoadingTitle(vm);
+        var success = await ResizeImageByPercentage(vm.FileInfo, percentage);
+        if (success)
+        {
+            await NavigationManager.QuickReload();
+        }
+        else
+        {
+            TitleManager.SetTitle(vm);
+        }
+    }
 
-    internal static async Task<bool> ResizeByWidth(FileInfo fileInfo, double width)
+    public static async Task<bool> ResizeByWidth(FileInfo fileInfo, double width)
     {
         if (width <= 0)
         {
@@ -30,7 +46,7 @@ internal static class ConversionHelper
         return await SaveImageFileHelper.ResizeImageAsync(fileInfo, (uint)width, 0).ConfigureAwait(false);
     }
 
-    internal static async Task<bool> ResizeByHeight(FileInfo fileInfo, double height)
+    public static async Task<bool> ResizeByHeight(FileInfo fileInfo, double height)
     {
         if (height <= 0)
         {
@@ -40,7 +56,7 @@ internal static class ConversionHelper
         return await SaveImageFileHelper.ResizeImageAsync(fileInfo, 0, (uint)height).ConfigureAwait(false);
     }
 
-    internal static async Task<string> ConvertTask(FileInfo fileInfo, int selectedIndex)
+    public static async Task<string> ConvertTask(FileInfo fileInfo, int selectedIndex)
     {
         var currentExtension = fileInfo.Extension.ToLower();
         var newExtension = selectedIndex switch
@@ -69,6 +85,20 @@ internal static class ConversionHelper
 
         FileDeletionHelper.DeleteFileWithErrorMsg(oldPath, false);
         return newPath;
+    }
+    
+    public static async Task ConvertFileExtension(int index, MainViewModel vm)
+    {
+        if (vm.FileInfo is null)
+        {
+            return;
+        }
+
+        var newPath = await ConvertTask(vm.FileInfo, index);
+        if (!string.IsNullOrWhiteSpace(newPath))
+        {
+            await NavigationManager.LoadPicFromStringAsync(newPath, vm);
+        }
     }
     
     public static void DetermineIfOptimizeImageShouldBeEnabled(MainViewModel vm)

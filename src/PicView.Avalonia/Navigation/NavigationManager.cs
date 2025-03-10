@@ -1,6 +1,5 @@
 ﻿using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Media.Imaging;
 using Avalonia.Threading;
 using ImageMagick;
@@ -16,6 +15,7 @@ using PicView.Avalonia.WindowBehavior;
 using PicView.Core.ArchiveHandling;
 using PicView.Core.FileHandling;
 using PicView.Core.Gallery;
+using PicView.Core.Http;
 using PicView.Core.ImageDecoding;
 using PicView.Core.Localization;
 using PicView.Core.Navigation;
@@ -45,7 +45,7 @@ public static class NavigationManager
     {
         return _imageIterator?.ImagePaths is not null &&
                _imageIterator.ImagePaths.Count > 0 && !CropFunctions.IsCropping &&
-               !UIHelper.IsDialogOpen && vm is { IsEditableTitlebarOpen: false, FileInfo: not null };
+               !DialogManager.IsDialogOpen && vm is { IsEditableTitlebarOpen: false, FileInfo: not null };
         // TODO: should probably turn this into CanExecute observable for ReactiveUI
     }
 
@@ -297,7 +297,7 @@ public static class NavigationManager
             return;
         }
 
-        SetTitleHelper.SetLoadingTitle(vm);
+        TitleManager.SetLoadingTitle(vm);
         if (_cancellationTokenSource is not null)
         {
             await _cancellationTokenSource.CancelAsync();
@@ -307,7 +307,7 @@ public static class NavigationManager
 
         if (fileList is null)
         {
-            SetTitleHelper.SetTitle(vm);
+            TitleManager.SetTitle(vm);
         }
         else
         {
@@ -315,7 +315,7 @@ public static class NavigationManager
             await LoadWithoutImageIterator(new FileInfo(fileList[0]), vm, fileList);
             if (vm.Title == TranslationHelper.Translation.Loading)
             {
-                SetTitleHelper.SetTitle(vm);
+                TitleManager.SetTitle(vm);
             }
         }
     }
@@ -337,16 +337,9 @@ public static class NavigationManager
             return;
         }
 
-        UIHelper.CloseMenus(vm);
+        MenuManager.CloseMenus(vm);
         vm.IsLoading = true;
-        SetTitleHelper.SetLoadingTitle(vm);
-
-        if (_cancellationTokenSource is not null)
-        {
-            await _cancellationTokenSource.CancelAsync().ConfigureAwait(false);
-        }
-
-        _cancellationTokenSource = new CancellationTokenSource();
+        TitleManager.SetLoadingTitle(vm);
 
         // Starting in new task makes it more responsive and works better
         await Task.Run(async () =>
@@ -444,8 +437,7 @@ public static class NavigationManager
                 }
                 else
                 {
-                    await _imageIterator.DisposeAsync();
-                    await ErrorHandling.ReloadAsync(vm);
+                    await LoadWithoutImageIterator(fileInfo, vm);
                 }
             }
             else
@@ -481,7 +473,7 @@ public static class NavigationManager
         }
 
         vm.IsLoading = true;
-        SetTitleHelper.SetLoadingTitle(vm);
+        TitleManager.SetLoadingTitle(vm);
 
         var extraction = await ArchiveExtraction
             .ExtractArchiveAsync(path, vm.PlatformService.ExtractWithLocalSoftwareAsync).ConfigureAwait(false);
@@ -534,7 +526,7 @@ public static class NavigationManager
         {
             vm.PlatformService.StopTaskbarProgress();
 
-            var httpDownload = HttpNavigation.GetDownloadClient(url);
+            var httpDownload = HttpManager.GetDownloadClient(url);
             using var client = httpDownload.Client;
             client.ProgressChanged += (totalFileSize, totalBytesDownloaded, progressPercentage) =>
             {
@@ -543,7 +535,7 @@ public static class NavigationManager
                     return;
                 }
 
-                var displayProgress = HttpNavigation.GetProgressDisplay(totalFileSize, totalBytesDownloaded,
+                var displayProgress = HttpManager.GetProgressDisplay(totalFileSize, totalBytesDownloaded,
                     progressPercentage);
                 vm.Title = displayProgress;
                 vm.TitleTooltip = displayProgress;
@@ -582,11 +574,14 @@ public static class NavigationManager
 
         var imageModel = await GetImageModel.GetImageModelAsync(fileInfo).ConfigureAwait(false);
         await UpdateImage.SetSingleImageAsync(imageModel.Image, imageModel.ImageType, url, vm);
-        vm.FileInfo = fileInfo;
-        vm.ExifOrientation = imageModel.EXIFOrientation;
-        FileHistoryNavigation.Add(url);
 
         vm.IsLoading = false;
+        vm.FileInfo = fileInfo;
+        vm.ExifOrientation = imageModel.EXIFOrientation;
+        FileHistory.Add(url);
+
+        await DisposeImageIteratorAsync();
+        
     }
 
     /// <summary>
@@ -597,11 +592,17 @@ public static class NavigationManager
     /// <returns>A task representing the asynchronous operation.</returns>
     public static async Task LoadPicFromBase64Async(string base64, MainViewModel vm)
     {
-        _imageIterator = null;
-        vm.ImageSource = null;
+        TitleManager.SetLoadingTitle(vm);
         vm.IsLoading = true;
-        SetTitleHelper.SetLoadingTitle(vm);
+        vm.ImageSource = null;
         vm.FileInfo = null;
+        
+        if (_cancellationTokenSource is not null)
+        {
+            await _cancellationTokenSource.CancelAsync();
+        }
+        await DisposeImageIteratorAsync();
+
         await Task.Run(async () =>
         {
             // TODO: Handle base64 if it's SVG image
@@ -652,7 +653,7 @@ public static class NavigationManager
     public static async Task LoadPicFromDirectoryAsync(string file, MainViewModel vm, FileInfo? fileInfo = null)
     {
         vm.IsLoading = true;
-        SetTitleHelper.SetLoadingTitle(vm);
+        TitleManager.SetLoadingTitle(vm);
 
         if (_cancellationTokenSource is not null)
         {
@@ -720,11 +721,13 @@ public static class NavigationManager
         {
             return;
         }
+        await _imageIterator.ClearAsync();
+        _imageIterator.ImagePaths.Clear();
         await _imageIterator.DisposeAsync();
     }
     
-    public static bool IsCollectionEmpty => _imageIterator.ImagePaths is null || _imageIterator.ImagePaths.Count < 0;
-    public static List<string> GetCollection => _imageIterator.ImagePaths;
+    public static bool IsCollectionEmpty => _imageIterator?.ImagePaths is null || _imageIterator?.ImagePaths?.Count < 0;
+    public static List<string>? GetCollection => _imageIterator?.ImagePaths;
     
     public static void UpdateFileListAndIndex(List<string> fileList, int index) => _imageIterator?.UpdateFileListAndIndex(fileList, index);
     
@@ -813,12 +816,7 @@ public static class NavigationManager
             }
             else 
             {
-                if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
-                {
-                    return;
-                }
-                var clipboard = desktop.MainWindow.Clipboard;
-                await ClipboardHelper.PasteClipboardImage(vm, clipboard);
+                await ClipboardImageOperations.PasteClipboardImage(vm);
             }
             return;
         }
@@ -912,30 +910,13 @@ public static class NavigationManager
         ImageModel? nextImageModel = null;
         vm.ImageSource = imageModel.Image;
         vm.ImageType = imageModel.ImageType;
-        if (Settings.ImageScaling.ShowImageSideBySide)
-        {
-            nextImageModel = (await _imageIterator.GetNextPreLoadValueAsync()).ImageModel;
-            vm.SecondaryImageSource = nextImageModel.Image;
-            await Dispatcher.UIThread.InvokeAsync(() =>
-            {
-                WindowResizing.SetSize(imageModel.PixelWidth, imageModel.PixelHeight, nextImageModel.PixelWidth,
-                    nextImageModel.PixelHeight, imageModel.Rotation, vm);
-            });
-        }
-        else
+        if (!Settings.ImageScaling.ShowImageSideBySide)
         {
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 WindowResizing.SetSize(imageModel.PixelWidth, imageModel.PixelHeight, 0, 0, imageModel.Rotation,
                     vm);
             });
-        }
-        
-        if (Settings.ImageScaling.ShowImageSideBySide)
-        {
-            // Fixes incorrect rendering in the side by side view
-            // TODO: Improve and fix side by side and remove this hack 
-            Dispatcher.UIThread.Post(() => { vm.ImageViewer?.MainImage?.InvalidateVisual(); });
         }
 
         await DisposeImageIteratorAsync();
@@ -949,23 +930,48 @@ public static class NavigationManager
         {
             _imageIterator = new ImageIterator(fileInfo, files, index, vm);
         }
-        
-        var isTiffUpdated = await CheckIfTiffAndUpdate(vm, fileInfo, index); 
-        if (!isTiffUpdated)
+
+        if (Settings.ImageScaling.ShowImageSideBySide)
         {
-            if (Settings.ImageScaling.ShowImageSideBySide)
+            nextImageModel = (await _imageIterator.GetNextPreLoadValueAsync()).ImageModel;
+            vm.SecondaryImageSource = nextImageModel.Image;
+            await Dispatcher.UIThread.InvokeAsync(() =>
             {
-                SetTitleHelper.SetSideBySideTitle(vm, imageModel, nextImageModel);
-            }
-            else
-            {
-                SetTitleHelper.SetTitle(vm, imageModel);
-            }
-        
+                WindowResizing.SetSize(imageModel.PixelWidth, imageModel.PixelHeight, nextImageModel.PixelWidth,
+                    nextImageModel.PixelHeight, imageModel.Rotation, vm);
+            });
+            
+            TitleManager.SetSideBySideTitle(vm, imageModel, nextImageModel);
             UpdateImage.SetStats(vm, index, imageModel);
+            
+            // Fixes incorrect rendering in the side by side view
+            // TODO: Improve and fix side by side and remove this hack 
+            Dispatcher.UIThread.Post(() => { vm.ImageViewer?.MainImage?.InvalidateVisual(); });
+        }
+        else
+        {
+            var isTiffUpdated = await CheckIfTiffAndUpdate(vm, fileInfo, index); 
+            if (!isTiffUpdated)
+            {
+                if (Settings.ImageScaling.ShowImageSideBySide)
+                {
+                    TitleManager.SetSideBySideTitle(vm, imageModel, nextImageModel);
+                }
+                else
+                {
+                    TitleManager.SetTitle(vm, imageModel);
+                }
+        
+                UpdateImage.SetStats(vm, index, imageModel);
+            }
         }
 
         vm.IsLoading = false;
+        FileHistory.Add(_imageIterator.ImagePaths[index]);
+        if (Settings.ImageScaling.ShowImageSideBySide)
+        {
+            FileHistory.Add(_imageIterator.ImagePaths[_imageIterator.GetIteration(index, NavigateTo.Next)]);
+        }
         await CheckAndReloadGallery(fileInfo, vm);
     }
 

@@ -118,7 +118,7 @@ public class ImageIterator : IAsyncDisposable
 
             ImagePaths = newList;
 
-            SetTitleHelper.SetTitle(_vm);
+            TitleManager.SetTitle(_vm);
 
             var index = ImagePaths.IndexOf(e.FullPath);
             if (index < 0)
@@ -204,7 +204,7 @@ public class ImageIterator : IAsyncDisposable
             else
             {
                 RemoveItemFromPreLoader(index);
-                SetTitleHelper.SetTitle(_vm);
+                TitleManager.SetTitle(_vm);
             }
 
             var removed = GalleryFunctions.RemoveGalleryItem(index, _vm);
@@ -232,7 +232,7 @@ public class ImageIterator : IAsyncDisposable
                 PreLoader.Resynchronize(ImagePaths);
             }
             
-            FileHistoryNavigation.Remove(e.FullPath);
+            FileHistory.Remove(e.FullPath);
 
         }
         catch (Exception exception)
@@ -305,12 +305,12 @@ public class ImageIterator : IAsyncDisposable
                 _vm.FileInfo = fileInfo;
             }
 
-            SetTitleHelper.SetTitle(_vm);
+            TitleManager.SetTitle(_vm);
             PreLoader.RefreshFileInfo(oldIndex, fileInfo, ImagePaths);
             Resynchronize();
 
             _isRunning = false;
-            FileHistoryNavigation.Rename(e.OldFullPath, e.FullPath);
+            FileHistory.Rename(e.OldFullPath, e.FullPath);
             await Dispatcher.UIThread.InvokeAsync(() =>
                 GalleryFunctions.RenameGalleryItem(oldIndex, index, Path.GetFileNameWithoutExtension(e.Name), e.FullPath,
                     _vm));
@@ -485,6 +485,29 @@ public class ImageIterator : IAsyncDisposable
     
     public async Task NextIteration(int iteration, CancellationTokenSource cts)
     {
+        // Handle side-by-side navigation
+        if (Settings.ImageScaling.ShowImageSideBySide)
+        {
+            // Handle properly navigating first or last image
+            if (iteration == GetCount - 1)
+            {
+                if (!Settings.UIProperties.Looping)
+                {
+                    return;
+                }
+
+                var targetIndex = IsReversed ? GetCount - 2 < 0 ? 0 : GetCount - 2 : 0;
+                await IterateToIndex(targetIndex, cts).ConfigureAwait(false);
+                return;
+            }
+
+            // Determine the next index based on navigation direction
+            var nextIndex = GetIteration(iteration, IsReversed ? NavigateTo.Previous : NavigateTo.Next);
+            await IterateToIndex(nextIndex, cts).ConfigureAwait(false);
+            return;
+        }
+
+        // When not showing side-by-side, decide based on keyboard state
         if (!MainKeyboardShortcuts.IsKeyHeldDown)
         {
             await IterateToIndex(iteration, cts).ConfigureAwait(false);
@@ -606,10 +629,14 @@ public class ImageIterator : IAsyncDisposable
 
             PreLoader.Add(index, ImagePaths, preloadValue?.ImageModel);
 
-            // Add recent files, except when browsing archive
+            // Add recent files
             if (string.IsNullOrWhiteSpace(TempFileHelper.TempFilePath) && ImagePaths.Count > CurrentIndex)
             {
-                FileHistoryNavigation.Add(ImagePaths[CurrentIndex]);
+                FileHistory.Add(ImagePaths[CurrentIndex]);
+                if (Settings.ImageScaling.ShowImageSideBySide)
+                {
+                    FileHistory.Add(ImagePaths[GetIteration(index, IsReversed ? NavigateTo.Previous : NavigateTo.Next)]);
+                }
             }
         }
         catch (OperationCanceledException)
@@ -637,7 +664,7 @@ public class ImageIterator : IAsyncDisposable
         
         void LoadingPreview()
         {
-            SetTitleHelper.SetLoadingTitle(_vm);
+            TitleManager.SetLoadingTitle(_vm);
             _vm.IsLoading = true;
 
             _vm.SelectedGalleryItemIndex = index;
@@ -716,7 +743,7 @@ public class ImageIterator : IAsyncDisposable
     public async ValueTask DisposeAsync()
     {
         await ClearAsync().ConfigureAwait(false);
-        Dispose(false, true);
+        Dispose(true, true);
     }
 
     private void Dispose(bool disposing, bool cleared = false)

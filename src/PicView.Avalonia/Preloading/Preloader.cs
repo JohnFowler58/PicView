@@ -418,6 +418,8 @@ public class PreLoader : IAsyncDisposable
     public void Clear()
     {
         _cancellationTokenSource?.Cancel();
+        _cancellationTokenSource?.Dispose();
+        _cancellationTokenSource = null;
         foreach (var item in _preLoadList.Values)
         {
             if (item.ImageModel?.Image is Bitmap img)
@@ -427,6 +429,13 @@ public class PreLoader : IAsyncDisposable
         }
 
         _preLoadList.Clear();
+        
+#if DEBUG
+        if (ShowAddRemove)
+        {
+            Trace.WriteLine("Preloader cleared");
+        }
+#endif
     }
 
     /// <summary>
@@ -447,6 +456,8 @@ public class PreLoader : IAsyncDisposable
             if (_cancellationTokenSource is not null)
             {
                 await _cancellationTokenSource?.CancelAsync();
+                _cancellationTokenSource.Dispose();
+                _cancellationTokenSource = null;
             }
         }
         catch (Exception e)
@@ -614,6 +625,13 @@ public class PreLoader : IAsyncDisposable
         }
 
         _disposed = true;
+        
+#if DEBUG
+        if (ShowAddRemove)
+        {
+            Trace.WriteLine("Preloader disposed");
+        }
+#endif
     }
 
     public async ValueTask DisposeAsync()

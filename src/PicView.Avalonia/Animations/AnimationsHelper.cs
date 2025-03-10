@@ -1,9 +1,12 @@
 ﻿using Avalonia;
 using Avalonia.Animation;
 using Avalonia.Animation.Easings;
+using Avalonia.Controls.Shapes;
 using Avalonia.Layout;
 using Avalonia.Media;
 using Avalonia.Styling;
+using Avalonia.Threading;
+using PicView.Avalonia.UI;
 
 namespace PicView.Avalonia.Animations;
 public static class AnimationsHelper
@@ -87,145 +90,38 @@ public static class AnimationsHelper
         };
     }
     
-    public static Animation RotationAnimation(object from, object to, double speed)
+    /// <summary>
+    /// Displays a brief animation to indicate a clipboard operation occurred
+    /// </summary>
+    public static async Task CopyAnimation()
     {
-        return new Animation
+        const double speed = 0.2;
+        const double opacity = 0.4;
+        var startOpacityAnimation = OpacityAnimation(0, opacity, speed);
+        var endOpacityAnimation = OpacityAnimation(opacity, 0, speed);
+        Rectangle? rectangle = null;
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            Duration = TimeSpan.FromSeconds(speed),
-            Easing = new LinearEasing(),
-            FillMode = FillMode.Forward,
-            Children =
+            rectangle = new Rectangle
             {
-                new KeyFrame
-                {
-                    Setters =
-                    {
-                        new Setter
-                        {
-                            Property = RotateTransform.AngleProperty,
-                            Value = from
-                        },
-                        new Setter
-                        {
-                            Property = RotateTransform.CenterXProperty,
-                            Value = from
-                        },
-                        new Setter
-                        {
-                            Property = RotateTransform.CenterYProperty,
-                            Value = from
-                        }
-                    },
-                    Cue = new Cue(0d)
-                },
-                new KeyFrame
-                {
-                    Setters =
-                    {
-                        new Setter
-                        {
-                            Property = RotateTransform.AngleProperty,
-                            Value = to
-                        },
-                        new Setter
-                        {
-                            Property = RotateTransform.CenterXProperty,
-                            Value = to
-                        },
-                        new Setter
-                        {
-                            Property = RotateTransform.CenterYProperty,
-                            Value = to
-                        }
-                    },
-                    Cue = new Cue(1d)
-                },
-            }
-        };
-    }
-    
-    public static Animation FlipAnimation(object from, object to, double speed)
-    {
-        var x = ScaleTransform.ScaleXProperty;
-        var y = ScaleTransform.ScaleYProperty;
-        return new Animation
+                Width = UIHelper.GetMainView.Width,
+                Height = UIHelper.GetMainView.Height,
+                Opacity = 0,
+                Fill = Brushes.Black,
+                IsHitTestVisible = false
+            };
+            UIHelper.GetMainView.MainGrid.Children.Add(rectangle);
+        });
+
+        await startOpacityAnimation.RunAsync(rectangle);
+        await endOpacityAnimation.RunAsync(rectangle);
+        await Task.Delay(200);
+
+        await Dispatcher.UIThread.InvokeAsync(() =>
         {
-            Duration = TimeSpan.FromSeconds(speed),
-            Easing = new LinearEasing(),
-            FillMode = FillMode.Forward,
-            Children =
-            {
-                new KeyFrame
-                {
-                    Setters =
-                    {
-                        new Setter
-                        {
-                            Property = x,
-                            Value = from
-                        },
-                        new Setter
-                        {
-                            Property = y,
-                            Value = 1
-                        }
-                    },
-                    Cue = new Cue(0d)
-                },
-                new KeyFrame
-                {
-                    Setters =
-                    {
-                        new Setter
-                        {
-                            Property = x,
-                            Value = to
-                        },
-                        new Setter
-                        {
-                            Property = y,
-                            Value = 1
-                        }
-                    },
-                    Cue = new Cue(1d)
-                },
-            }
-        };
-    }
-    
-    public static Animation ZoomAnimation(double initialZoom, double zoomValue, double oldX, double oldY, double newX, double newY, TimeSpan duration)
-    {
-        return new Animation
-        {
-            Duration = duration,
-            FillMode = FillMode.Forward,
-            Easing = new LinearEasing(),
-            Children =
-            {
-                new KeyFrame
-                {
-                    Cue = new Cue(0d),
-                    Setters =
-                    {
-                        new Setter(ScaleTransform.ScaleXProperty, initialZoom),
-                        new Setter(ScaleTransform.ScaleYProperty, initialZoom),
-                        new Setter(TranslateTransform.XProperty, oldX),
-                        new Setter(TranslateTransform.YProperty, oldY)
-                    }
-                },
-                new KeyFrame
-                {
-                    Cue = new Cue(1d),
-                    Setters =
-                    {
-                        new Setter(ScaleTransform.ScaleXProperty, zoomValue),
-                        new Setter(ScaleTransform.ScaleYProperty, zoomValue),
-                        new Setter(TranslateTransform.XProperty, newX),
-                        new Setter(TranslateTransform.YProperty, newY)
-                    }
-                }
-            }
-        };
+            UIHelper.GetMainView.MainGrid.Children.Remove(rectangle);
+        });
     }
     
     public static Animation CenteringAnimation(double fromX, double fromY, double toX, double toY, double speed)

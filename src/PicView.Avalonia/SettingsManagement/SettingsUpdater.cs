@@ -5,6 +5,7 @@ using Avalonia.Controls.Primitives;
 using Avalonia.Media;
 using Avalonia.Threading;
 using PicView.Avalonia.ColorManagement;
+using PicView.Avalonia.ImageHandling;
 using PicView.Avalonia.Navigation;
 using PicView.Avalonia.UI;
 using PicView.Avalonia.ViewModels;
@@ -71,7 +72,7 @@ public static class SettingsUpdater
         }
         finally
         {
-            SetTitleHelper.SetTitle(vm);
+            TitleManager.SetTitle(vm);
             vm.IsLoading = false;
         }
     }
@@ -123,7 +124,7 @@ public static class SettingsUpdater
         Settings.Sorting.IncludeSubDirectories = false;
         
         await NavigationManager.ReloadFileListAsync().ConfigureAwait(false);
-        SetTitleHelper.SetTitle(vm);
+        TitleManager.SetTitle(vm);
     }
     
     public static async Task TurnOnSubdirectories(MainViewModel vm)
@@ -132,7 +133,7 @@ public static class SettingsUpdater
         Settings.Sorting.IncludeSubDirectories = true;
         
         await NavigationManager.ReloadFileListAsync().ConfigureAwait(false);
-        SetTitleHelper.SetTitle(vm);
+        TitleManager.SetTitle(vm);
     }
     
     public static async Task ToggleTaskbarProgress(MainViewModel vm)
@@ -188,6 +189,7 @@ public static class SettingsUpdater
         vm.IsShowingSideBySide = false;
         vm.SecondaryImageSource = null;
         WindowResizing.SetSize(vm);
+        TitleManager.SetTitle(vm);
     }
     
     public static async Task TurnOnSideBySide(MainViewModel vm)
@@ -205,10 +207,29 @@ public static class SettingsUpdater
                 return;
             }
             vm.SecondaryImageSource = preloadValue.ImageModel.Image;
+            var imageModel1 = new ImageModel
+            {
+                FileInfo = vm.FileInfo,
+                PixelWidth = (int)vm.ImageWidth,
+                PixelHeight = (int)vm.ImageHeight,
+                ImageType = vm.ImageType,
+                Image = vm.ImageSource,
+                EXIFOrientation = vm.ExifOrientation
+            };
+            var imageModel2 = new ImageModel
+            {
+                FileInfo = preloadValue.ImageModel.FileInfo,
+                PixelWidth = preloadValue.ImageModel.PixelWidth,
+                PixelHeight = preloadValue.ImageModel.PixelHeight,
+                ImageType = preloadValue.ImageModel.ImageType,
+                Image = preloadValue.ImageModel.Image,
+                EXIFOrientation = preloadValue.ImageModel.EXIFOrientation
+            };
             await Dispatcher.UIThread.InvokeAsync(() =>
             {
                 WindowResizing.SetSize(vm.ImageWidth, vm.ImageHeight, preloadValue.ImageModel.PixelWidth,
                     preloadValue.ImageModel.PixelHeight, vm.RotationAngle, vm);
+                TitleManager.SetSideBySideTitle(vm, imageModel1, imageModel2);
             });
         }
     }
@@ -228,7 +249,7 @@ public static class SettingsUpdater
         {
             TurnOnScroll(vm);
         }
-
+        
         WindowResizing.SetSize(vm);
         
         await SaveSettingsAsync();

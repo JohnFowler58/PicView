@@ -86,16 +86,8 @@ public static class WindowResizing
         vm.ImageWidth = size.Width;
         vm.SecondaryImageWidth = size.SecondaryWidth;
         vm.ImageHeight = size.Height;
-        if (NavigationManager.CanNavigate(vm))
-        {
-            vm.GalleryMargin = new Thickness(0, 0, 0, size.Margin);
-        }
-        else
-        {
-            vm.GalleryMargin = new Thickness(0, 0, 0, 0);
-        }
+        vm.GalleryMargin = new Thickness(0, 0, 0, size.Margin);
         
-
         vm.ScrollViewerWidth = size.ScrollViewerWidth;
         vm.ScrollViewerHeight = size.ScrollViewerHeight;
 
@@ -153,8 +145,8 @@ public static class WindowResizing
         }
         else
         {
-            firstWidth = GetWidth();
-            firstHeight = GetHeight();
+            firstWidth = preloadValue.ImageModel?.PixelWidth ?? vm.ImageWidth;
+            firstHeight = preloadValue.ImageModel?.PixelHeight ?? vm.ImageHeight;
         }
 
         if (!Settings.ImageScaling.ShowImageSideBySide)
@@ -164,10 +156,10 @@ public static class WindowResizing
 
         var secondaryPreloadValue = NavigationManager.GetNextPreLoadValue();
         double secondWidth, secondHeight;
-        if (secondaryPreloadValue != null)
+        if (secondaryPreloadValue is { ImageModel: not null })
         {
-            secondWidth = GetWidth();
-            secondHeight = GetHeight();
+            secondWidth = secondaryPreloadValue.ImageModel.PixelWidth;
+            secondHeight = secondaryPreloadValue.ImageModel.PixelHeight;
         }
         else if (NavigationManager.CanNavigate(vm))
         {
@@ -184,16 +176,6 @@ public static class WindowResizing
         }
             
         return GetSize(firstWidth, firstHeight, secondWidth, secondHeight, vm.RotationAngle, vm);
-
-        double GetWidth()
-        {
-            return preloadValue?.ImageModel?.PixelWidth ?? vm.ImageWidth;
-        }
-
-        double GetHeight()
-        {
-            return preloadValue?.ImageModel?.PixelHeight ?? vm.ImageHeight;
-        }
     }
     
     public static ImageSizeCalculationHelper.ImageSize? GetSize(double width, double height, double secondWidth, double secondHeight, double rotation,
@@ -211,8 +193,7 @@ public static class WindowResizing
         {
             return null;
         }
-
-        const int padding = 45;
+        
         var screenSize = ScreenHelper.ScreenSize;
         var desktopMinWidth = desktop.MainWindow.MinWidth;
         var desktopMinHeight = desktop.MainWindow.MinHeight;
@@ -239,7 +220,6 @@ public static class WindowResizing
                 desktopMinHeight,
                 ImageSizeCalculationHelper.GetInterfaceSize(),
                 rotation,
-                padding,
                 screenSize.Scaling,
                 vm.TitlebarHeight,
                 vm.BottombarHeight,
@@ -258,7 +238,6 @@ public static class WindowResizing
                 desktopMinHeight,
                 ImageSizeCalculationHelper.GetInterfaceSize(),
                 rotation,
-                padding,
                 screenSize.Scaling,
                 vm.TitlebarHeight,
                 vm.BottombarHeight,

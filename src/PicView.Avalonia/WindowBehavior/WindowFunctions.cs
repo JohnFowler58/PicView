@@ -3,6 +3,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Input;
+using Avalonia.Layout;
 using Avalonia.Threading;
 using PicView.Avalonia.Input;
 using PicView.Avalonia.Navigation;
@@ -11,6 +12,7 @@ using PicView.Avalonia.ViewModels;
 using PicView.Core.ArchiveHandling;
 using PicView.Core.Calculations;
 using PicView.Core.FileHandling;
+using PicView.Core.Navigation;
 
 // ReSharper disable CompareOfFloatsByEqualityOperator
 
@@ -40,7 +42,7 @@ public static class WindowFunctions
         }
 
         var vm = window.DataContext as MainViewModel;
-        string lastFile;
+        string? lastFile;
         if (NavigationManager.CanNavigate(vm))
         {
             if (!string.IsNullOrEmpty(ArchiveExtraction.LastOpenedArchive))
@@ -49,25 +51,87 @@ public static class WindowFunctions
             }
             else
             {
-                lastFile = vm?.FileInfo?.FullName ?? FileHistoryNavigation.GetLastFile();
+                lastFile = vm?.FileInfo?.FullName ?? FileHistory.GetLastEntry();
             }
         }
         else
         {
             var url = vm?.Title.GetURL();
-            lastFile = !string.IsNullOrWhiteSpace(url) ? url : FileHistoryNavigation.GetLastFile();
+            lastFile = !string.IsNullOrWhiteSpace(url) ? url : FileHistory.GetLastEntry();
         }
 
         Settings.StartUp.LastFile = lastFile;
         await SaveSettingsAsync();
         await KeybindingManager.UpdateKeyBindingsFile(); // Save keybindings
         FileDeletionHelper.DeleteTempFiles();
-        FileHistoryNavigation.WriteToFile();
+        FileHistory.SaveToFile();
         ArchiveExtraction.Cleanup();
         Environment.Exit(0);
     }
 
     #region Window State
+    
+    public static async Task ResizeAndFixRenderingError(MainViewModel vm)
+    {
+        await Dispatcher.UIThread.InvokeAsync(() =>
+        {
+            if (Settings.WindowProperties.AutoFit)
+            {
+                if (vm.PixelWidth > UIHelper.GetMainView.Bounds.Width || vm.PixelHeight > UIHelper.GetMainView.Bounds.Height)
+                {
+                    vm.ImageViewer.MainBorder.Height = double.NaN;
+                    vm.ImageViewer.MainBorder.Width = double.NaN;
+
+                    WindowResizing.SetSize(1, 1, 0, 0, 0, vm);
+                }
+                else
+                {
+                    WindowResizing.SetSize(vm);
+                }
+                CenterWindowOnScreen(false);
+            }
+            else
+            {
+                WindowResizing.SetSize(vm);
+            }
+            
+            if (Settings.WindowProperties.AutoFit)
+            {
+                if (Settings.ImageScaling.StretchImage)
+                {
+                    // Setting horizontal and vertical alignment fixes the rendering error
+                    if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
+                    {
+                        return;
+                    }
+                    Dispatcher.UIThread.Post(() => WindowResizing.SetSize(vm), DispatcherPriority.Render);
+                    desktop.MainWindow.HorizontalAlignment = HorizontalAlignment.Center;
+                    desktop.MainWindow.VerticalAlignment = VerticalAlignment.Center;
+                }
+                else
+                {
+                    if (vm.PixelWidth > UIHelper.GetMainView.Bounds.Width || vm.PixelHeight > UIHelper.GetMainView.Bounds.Height)
+                    {
+                        Dispatcher.UIThread.Post(() => WindowResizing.SetSize(vm), DispatcherPriority.Render);
+                    }
+                }
+            }
+        }, DispatcherPriority.Send);
+        if (Settings.ImageScaling.StretchImage)
+        {
+            if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
+            {
+                return;
+            }
+            Dispatcher.UIThread.Post(() =>
+            {
+                WindowResizing.SetSize(vm);
+                // Reset the horizontal and vertical alignment after fixing the rendering error
+                desktop.MainWindow.HorizontalAlignment = HorizontalAlignment.Stretch;
+                desktop.MainWindow.VerticalAlignment = VerticalAlignment.Stretch;
+            }, DispatcherPriority.Render);
+        }
+    }
 
     public static void ShowMinimizedWindow(Window window)
     {
@@ -116,9 +180,7 @@ public static class WindowFunctions
             Settings.WindowProperties.AutoFit = true;
             vm.IsAutoFit = true;
         }
-
-        WindowResizing.SetSize(vm);
-        await Dispatcher.UIThread.InvokeAsync(() => CenterWindowOnScreen(false));
+        await ResizeAndFixRenderingError(vm);
         await SaveSettingsAsync().ConfigureAwait(false);
     }
 
@@ -143,8 +205,7 @@ public static class WindowFunctions
             vm.IsStretched = true;
         }
 
-        WindowResizing.SetSize(vm);
-        await Dispatcher.UIThread.InvokeAsync(() => CenterWindowOnScreen(false));
+        await ResizeAndFixRenderingError(vm);
         await SaveSettingsAsync().ConfigureAwait(false);
     }
 

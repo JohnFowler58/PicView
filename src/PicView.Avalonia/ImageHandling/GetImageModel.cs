@@ -6,146 +6,174 @@ namespace PicView.Avalonia.ImageHandling;
 
 public static class GetImageModel
 {
+    // Group extensions by how they should be handled
+    private static readonly Dictionary<string, ImageHandler> ExtensionHandlers = new()
+    {
+        { ".webp", new AnimatedWebpHandler() },
+        { ".gif", new AnimatedGifHandler() },
+        { ".png", new StandardBitmapHandler() },
+        { ".jpg", new StandardBitmapHandler() },
+        { ".jpeg", new StandardBitmapHandler() },
+        { ".jpe", new StandardBitmapHandler() },
+        { ".bmp", new StandardBitmapHandler() },
+        { ".jfif", new StandardBitmapHandler() },
+        { ".ico", new StandardBitmapHandler() },
+        { ".wbmp", new StandardBitmapHandler() },
+        { ".svg", new SvgHandler() },
+        { ".svgz", new SvgHandler() },
+        { ".b64", new Base64Handler() }
+    };
+
     public static async Task<ImageModel?> GetImageModelAsync(FileInfo fileInfo)
     {
         if (fileInfo is null)
         {
-#if DEBUG
-            Console.WriteLine($"Error: {nameof(GetImageModel)}:{nameof(GetImageModelAsync)}: fileInfo is null");
-#endif
-            return new ImageModel
-            {
-                FileInfo = null,
-                ImageType = ImageType.Invalid,
-                Image = null, // TODO replace with error image
-                PixelHeight = 0,
-                PixelWidth = 0,
-                EXIFOrientation = EXIFHelper.EXIFOrientation.None
-            };
+            LogError("fileInfo is null");
+            return CreateErrorImageModel(null);
         }
 
         var imageModel = new ImageModel { FileInfo = fileInfo };
 
         try
         {
+            // Get extension and prepare MagickImage for metadata
             var ext = fileInfo.Extension.ToLower();
             using var magickImage = new MagickImage();
             magickImage.Ping(fileInfo);
+            
+            // If extension is missing, use format from MagickImage
             if (string.IsNullOrEmpty(ext))
             {
-                ext = magickImage.Format.ToString().ToLower();
+                ext = $".{magickImage.Format.ToString().ToLower()}";
             }
+            
+            // Extract EXIF orientation early
             imageModel.EXIFOrientation = EXIFHelper.GetImageOrientation(magickImage);
 
-            switch (ext)
+            // Process the image based on extension
+            if (ExtensionHandlers.TryGetValue(ext, out var handler))
             {
-                case ".webp":
-                    await AddImageAsync(fileInfo, imageModel).ConfigureAwait(false);
-                    if (ImageHelper.IsAnimated(fileInfo))
-                    {
-                        imageModel.ImageType = ImageType.AnimatedWebp;
-                    }
-
-                    break;
-                case ".gif":
-                    await AddImageAsync(fileInfo, imageModel).ConfigureAwait(false);
-                    if (ImageHelper.IsAnimated(fileInfo))
-                    {
-                        imageModel.ImageType = ImageType.AnimatedGif;
-                    }
-
-                    break;
-                case ".png":
-                case ".jpg":
-                case ".jpeg":
-                case ".jpe":
-                case ".bmp":
-                case ".jfif":
-                case ".ico":
-                case ".wbmp":
-                    await AddImageAsync(fileInfo, imageModel).ConfigureAwait(false);
-
-                    break;
-
-                case ".svg":
-                case ".svgz":
-                    AddSvgImage(fileInfo, imageModel);
-                    break;
-
-                case ".b64":
-                    await AddBase64ImageAsync(fileInfo, imageModel).ConfigureAwait(false);
-                    break;
-
-                default:
-                    await AddDefaultImageAsync(fileInfo, imageModel).ConfigureAwait(false);
-                    break;
+                await handler.ProcessImageAsync(fileInfo, imageModel).ConfigureAwait(false);
             }
+            else
+            {
+                // Unknown format - try default handler
+                await new DefaultImageHandler().ProcessImageAsync(fileInfo, imageModel).ConfigureAwait(false);
+            }
+
+            return imageModel;
         }
         catch (Exception e)
         {
-#if DEBUG
-            Console.WriteLine($"Error: {nameof(GetImageModel)}:{nameof(GetImageModelAsync)}: \n{e}");
-#endif
-            return new ImageModel
-            {
-                FileInfo = fileInfo,
-                ImageType = ImageType.Invalid,
-                Image = null, // TODO replace with error image
-                PixelHeight = 0,
-                PixelWidth = 0,
-                EXIFOrientation = EXIFHelper.EXIFOrientation.None
-            };
+            LogError($"Error processing {fileInfo.Name}: {e.Message}");
+            return CreateErrorImageModel(fileInfo);
         }
-
-        return imageModel;
     }
 
-    private static async Task AddDefaultImageAsync(FileInfo fileInfo, ImageModel imageModel)
+    private static void LogError(string message)
     {
-        var bitmap = await GetImage.GetDefaultBitmapAsync(fileInfo).ConfigureAwait(false);
-        SetModel(bitmap, fileInfo, imageModel);
+#if DEBUG
+        Console.WriteLine($"Error: {nameof(GetImageModel)}:{nameof(GetImageModelAsync)}: {message}");
+#endif
     }
 
-
-    #region Bitmap
-
-    private static async Task AddImageAsync(FileInfo fileInfo, ImageModel imageModel)
+    private static ImageModel CreateErrorImageModel(FileInfo? fileInfo)
     {
-        var bitmap = await GetImage.GetStandardBitmapAsync(fileInfo).ConfigureAwait(false);
-        SetModel(bitmap, fileInfo, imageModel);
+        return new ImageModel
+        {
+            FileInfo = fileInfo,
+            ImageType = ImageType.Invalid,
+            Image = null, // TODO replace with error image
+            PixelHeight = 0,
+            PixelWidth = 0,
+            EXIFOrientation = EXIFHelper.EXIFOrientation.None
+        };
     }
 
-    private static void SetModel(Bitmap bitmap, FileInfo fileInfo, ImageModel imageModel)
+    #region Image Handlers
+
+    // Base abstract class for all image handlers
+    private abstract class ImageHandler
     {
-        imageModel.Image = bitmap;
-        imageModel.PixelWidth = bitmap?.PixelSize.Width ?? 0;
-        imageModel.PixelHeight = bitmap?.PixelSize.Height ?? 0;
-        imageModel.ImageType = ImageType.Bitmap;
-        imageModel.EXIFOrientation = EXIFHelper.GetImageOrientation(fileInfo);
+        public abstract Task ProcessImageAsync(FileInfo fileInfo, ImageModel imageModel);
+
+        protected static void SetBitmapModel(Bitmap bitmap, FileInfo fileInfo, ImageModel imageModel, ImageType imageType = ImageType.Bitmap)
+        {
+            imageModel.Image = bitmap;
+            imageModel.PixelWidth = bitmap?.PixelSize.Width ?? 0;
+            imageModel.PixelHeight = bitmap?.PixelSize.Height ?? 0;
+            imageModel.ImageType = imageType;
+            imageModel.EXIFOrientation = EXIFHelper.GetImageOrientation(fileInfo);
+        }
     }
 
-    #endregion
-
-    #region SVG
-
-    private static void AddSvgImage(FileInfo fileInfo, ImageModel imageModel)
+    // Handler for standard bitmap formats
+    private class StandardBitmapHandler : ImageHandler
     {
-        var svg = new MagickImage();
-        svg.Ping(fileInfo.FullName);
-        imageModel.PixelWidth = (int)svg.Width;
-        imageModel.PixelHeight = (int)svg.Height;
-        imageModel.ImageType = ImageType.Svg;
-        imageModel.Image = fileInfo.FullName;
+        public override async Task ProcessImageAsync(FileInfo fileInfo, ImageModel imageModel)
+        {
+            var bitmap = await GetImage.GetStandardBitmapAsync(fileInfo).ConfigureAwait(false);
+            SetBitmapModel(bitmap, fileInfo, imageModel);
+        }
     }
 
-    #endregion
-    
-    #region Base64
-
-    private static async Task AddBase64ImageAsync(FileInfo fileInfo, ImageModel imageModel)
+    // Handler for animated WebP
+    private class AnimatedWebpHandler : ImageHandler
     {
-        var base64 = await GetImage.GetBase64ImageAsync(fileInfo).ConfigureAwait(false);
-        SetModel(base64, fileInfo, imageModel);
+        public override async Task ProcessImageAsync(FileInfo fileInfo, ImageModel imageModel)
+        {
+            var bitmap = await GetImage.GetStandardBitmapAsync(fileInfo).ConfigureAwait(false);
+            SetBitmapModel(bitmap, fileInfo, imageModel, 
+                ImageAnalyzer.IsAnimated(fileInfo) ? ImageType.AnimatedWebp : ImageType.Bitmap);
+        }
+    }
+
+    // Handler for animated GIF
+    private class AnimatedGifHandler : ImageHandler
+    {
+        public override async Task ProcessImageAsync(FileInfo fileInfo, ImageModel imageModel)
+        {
+            var bitmap = await GetImage.GetStandardBitmapAsync(fileInfo).ConfigureAwait(false);
+            SetBitmapModel(bitmap, fileInfo, imageModel, 
+                ImageAnalyzer.IsAnimated(fileInfo) ? ImageType.AnimatedGif : ImageType.Bitmap);
+        }
+    }
+
+    // Handler for SVG images
+    private class SvgHandler : ImageHandler
+    {
+        public override Task ProcessImageAsync(FileInfo fileInfo, ImageModel imageModel)
+        {
+            using var svg = new MagickImage();
+            svg.Ping(fileInfo.FullName);
+            
+            imageModel.PixelWidth = (int)svg.Width;
+            imageModel.PixelHeight = (int)svg.Height;
+            imageModel.ImageType = ImageType.Svg;
+            imageModel.Image = fileInfo.FullName;
+            
+            return Task.CompletedTask;
+        }
+    }
+
+    // Handler for Base64 encoded images
+    private class Base64Handler : ImageHandler
+    {
+        public override async Task ProcessImageAsync(FileInfo fileInfo, ImageModel imageModel)
+        {
+            var bitmap = await GetImage.GetBase64ImageAsync(fileInfo).ConfigureAwait(false);
+            SetBitmapModel(bitmap, fileInfo, imageModel);
+        }
+    }
+
+    // Default handler for unknown formats
+    private class DefaultImageHandler : ImageHandler
+    {
+        public override async Task ProcessImageAsync(FileInfo fileInfo, ImageModel imageModel)
+        {
+            var bitmap = await GetImage.GetDefaultBitmapAsync(fileInfo).ConfigureAwait(false);
+            SetBitmapModel(bitmap, fileInfo, imageModel);
+        }
     }
 
     #endregion

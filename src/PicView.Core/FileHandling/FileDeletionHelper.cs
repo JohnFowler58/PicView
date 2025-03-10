@@ -8,7 +8,11 @@ public static class FileDeletionHelper
 {
     public static string DeleteFileWithErrorMsg(string file, bool recycle)
     {
-        if (File.Exists(file) == false)
+        if (string.IsNullOrWhiteSpace(file))
+        {
+            return string.Empty;
+        }
+        if ( File.Exists(file) == false)
         {
             return string.Empty;
         }

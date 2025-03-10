@@ -186,7 +186,7 @@ public static class Zoom
         {
             return;
         }
-        SetTitleHelper.SetTitle(vm);
+        TitleManager.SetTitle(vm);
         _ = TooltipHelper.ShowTooltipMessageAsync($"{Math.Floor(zoomValue * 100)}%", center: true, TimeSpan.FromSeconds(1));
     }
 
@@ -234,7 +234,7 @@ public static class Zoom
         vm.ZoomValue = 1;
         vm.RotationAngle = 0;
         TooltipHelper.StopTooltipMessage();
-        SetTitleHelper.SetTitle(vm);
+        TitleManager.SetTitle(vm);
     }
 
     public static void Capture(PointerEventArgs e)

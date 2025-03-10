@@ -28,7 +28,7 @@ public partial class StartUpMenu : UserControl
                 return;
 
             var selectFileBrush = brush as SolidColorBrush;
-            selectFileBrush.Color = ColorManager.GetPrimaryAccentColor;
+            selectFileBrush.Color = ColorManager.PrimaryAccentColor;
         };
 
         SelectFileButton.PointerExited += (_, _) =>
@@ -49,7 +49,7 @@ public partial class StartUpMenu : UserControl
                 return;
 
             var selectFileBrush = brush as SolidColorBrush;
-            selectFileBrush.Color = ColorManager.GetPrimaryAccentColor;
+            selectFileBrush.Color = ColorManager.PrimaryAccentColor;
         };
 
         OpenLastFileButton.PointerExited += (_, _) =>
@@ -70,7 +70,7 @@ public partial class StartUpMenu : UserControl
                 return;
 
             var selectFileBrush = brush as SolidColorBrush;
-            selectFileBrush.Color = ColorManager.GetPrimaryAccentColor;
+            selectFileBrush.Color = ColorManager.PrimaryAccentColor;
         };
 
         PasteButton.PointerExited += (_, _) =>
@@ -88,7 +88,7 @@ public partial class StartUpMenu : UserControl
         if (DataContext is not MainViewModel vm)
             return;
 
-        SetTitleHelper.SetNoImageTitle(vm);
+        TitleManager.SetNoImageTitle(vm);
     }
 
     public void ResponsiveSize(double width, double height)
@@ -126,9 +126,18 @@ public partial class StartUpMenu : UserControl
                 break;
         }
 
-        vm.TitleMaxWidth = ImageSizeCalculationHelper.GetTitleMaxWidth(vm.RotationAngle, width, height,
+        var titleMaxWidth = ImageSizeCalculationHelper.GetTitleMaxWidth(vm.RotationAngle, width, height,
             desktop.MainWindow.MinWidth, desktop.MainWindow.MinHeight, ImageSizeCalculationHelper.GetInterfaceSize(),
             desktop.MainWindow.Width);
+
+        if (Settings.Zoom.ScrollEnabled)
+        {
+            vm.TitleMaxWidth = titleMaxWidth - SizeDefaults.ScrollbarSize;
+        }
+        else
+        {
+            vm.TitleMaxWidth = titleMaxWidth;
+        }
         
         return;
 

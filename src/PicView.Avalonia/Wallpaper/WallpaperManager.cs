@@ -1,18 +1,40 @@
 ﻿using System.Runtime.InteropServices;
+using PicView.Avalonia.ImageHandling;
+using PicView.Avalonia.UI;
+using PicView.Avalonia.ViewModels;
 
 namespace PicView.Avalonia.Wallpaper;
 
-public enum WallpaperStyle
-{
-    Tile,
-    Center,
-    Stretch,
-    Fit,
-    Fill
-}
-
 public static class WallpaperManager
 {
+    
+    public static async Task SetAsWallpaper(string path, WallpaperStyle style, MainViewModel vm)
+    {
+        if (vm.PlatformService is null)
+        {
+            return;
+        }
+        
+        vm.IsLoading = true;
+        try
+        {
+            var file = await ImageFormatConverter.ConvertToCommonSupportedFormatAsync(path, vm).ConfigureAwait(false);
+
+            vm.PlatformService?.SetAsWallpaper(file, GetWallpaperStyle(style));
+        }
+        catch (Exception e)
+        {
+            await TooltipHelper.ShowTooltipMessageAsync(e.Message, true);
+#if DEBUG
+            Console.WriteLine(e);   
+#endif
+        }
+        finally
+        {
+            vm.IsLoading = false;
+        }
+    }
+    
     public static int GetWallpaperStyle(WallpaperStyle style)
     {
         switch (style)

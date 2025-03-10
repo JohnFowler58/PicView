@@ -7,7 +7,7 @@ using Microsoft.Win32;
 using PicView.Avalonia.UI;
 using PicView.Avalonia.ViewModels;
 using PicView.Avalonia.WindowBehavior;
-using PicView.Core.FileHandling;
+using PicView.Core.Http;
 #if RELEASE
 using PicView.Core.Config;
 #endif
@@ -212,7 +212,7 @@ public static class UpdateManager
     {
         try
         {
-            using var downloader = new HttpHelper.HttpClientDownloadWithProgress(url, destinationPath);
+            using var downloader = new HttpClientDownloadWithProgress(url, destinationPath);
             await downloader.StartDownloadAsync();
             return true;
         }
@@ -485,7 +485,7 @@ public static class UpdateManager
     {
         vm.PlatformService.StopTaskbarProgress();
 
-        using var downloader = new HttpHelper.HttpClientDownloadWithProgress(downloadUrl, tempPath);
+        using var downloader = new HttpClientDownloadWithProgress(downloadUrl, tempPath);
         try
         {
             downloader.ProgressChanged += (size, downloaded, percentage) =>

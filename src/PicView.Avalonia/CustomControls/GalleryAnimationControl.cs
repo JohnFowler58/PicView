@@ -148,7 +148,7 @@ public class GalleryAnimationControl : UserControl
         {
             _isAnimating = true;
 
-            ViewModel.SetGalleryItemStretch(Settings.Gallery.FullGalleryStretchMode);
+            GalleryHelper.SetGalleryItemStretch(Settings.Gallery.FullGalleryStretchMode, ViewModel);
 
             // Setup initial state
             await Dispatcher.UIThread.InvokeAsync(() =>
@@ -240,7 +240,7 @@ public class GalleryAnimationControl : UserControl
             _isAnimating = true;
 
             // Setup gallery properties
-            ViewModel.SetGalleryItemStretch(Settings.Gallery.BottomGalleryStretchMode);
+            GalleryHelper.SetGalleryItemStretch(Settings.Gallery.BottomGalleryStretchMode, ViewModel);
 
             // Setup initial state
             await Dispatcher.UIThread.InvokeAsync(() =>

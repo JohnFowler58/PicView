@@ -9,7 +9,7 @@ using PicView.Core.Navigation;
 
 namespace PicView.Avalonia.UI;
 
-public static class SetTitleHelper
+public static class TitleManager
 {
     /// <summary>
     ///     Sets the title of the window and the title displayed in the UI to the appropriate

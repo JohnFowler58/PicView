@@ -11,90 +11,74 @@ internal partial class SourceGenerationContext : JsonSerializerContext;
 
 public static class SettingsHelper
 {
-    private const double CurrentSettingsVersion = 1.1;
-    private const string ConfigPath = "Config/UserSettings.json";
-    private const string RoamingConfigPath = "Ruben2776/PicView/Config/UserSettings.json";
+    private const double CurrentSettingsVersion = 1.3;
+    private const string ConfigFileName = "UserSettings.json";
+    private const string LocalConfigPath = "Config/" + ConfigFileName;
+    private const string RoamingConfigFolder = "Ruben2776/PicView/Config";
+    private const string RoamingConfigPath = RoamingConfigFolder + "/" + ConfigFileName;
 
     public static AppSettings? Settings { get; private set; }
-    
+
     /// <summary>
-    /// Asynchronously loads the user settings. Loads defaults if not found 
+    ///     Asynchronously loads the user settings. Loads defaults if not found
     /// </summary>
-    /// <returns>True if settings exists</returns>
+    /// <returns>True if settings exists and were loaded successfully</returns>
     public static async Task<bool> LoadSettingsAsync()
     {
         try
         {
             var path = GetUserSettingsPath();
-            if (string.IsNullOrEmpty(path))
+            if (!string.IsNullOrEmpty(path))
             {
-                SetDefaults();
-                return false;
+                return await LoadFromPathAsync(path).ConfigureAwait(false);
             }
-
-            try
-            {
-                await PerformRead(path).ConfigureAwait(false);
-            }
-            catch (Exception)
-            {
-                return await Retry().ConfigureAwait(false);
-            }
-        }
-#if DEBUG
-        catch (Exception ex)
-        {
-
-            Trace.WriteLine($"{nameof(LoadSettingsAsync)} error loading settings:\n {ex.Message}");
 
             SetDefaults();
             return false;
         }
-#else
-        catch
+        catch (Exception ex)
         {
-            SetDefaults();  
+            LogError(nameof(LoadSettingsAsync), ex);
+            SetDefaults();
             return false;
         }
-#endif
-        return true;
-
-        async Task<bool> Retry()
-        {
-            // TODO test saving location for macOS https://johnkoerner.com/csharp/special-folder-values-on-windows-versus-mac/
-            var appData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), RoamingConfigPath);
-            if (File.Exists(appData))
-            {
-                try
-                {
-                    await PerformRead(appData).ConfigureAwait(false);
-                }
-                catch (Exception)
-                {
-                    SetDefaults();
-                    return false;
-                }
-            }
-            else
-            {
-                SetDefaults();
-                return false;
-            }
-            return true;
-        }
     }
 
+    /// <summary>
+    ///     Determines the path to the user settings file
+    /// </summary>
+    /// <returns>Path to the user settings file, or empty string if not found</returns>
     public static string GetUserSettingsPath()
     {
-        var appData = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), RoamingConfigPath);
-        if (File.Exists(appData))
+        var roamingPath = GetRoamingSettingsPath();
+        if (File.Exists(roamingPath))
         {
-            return appData;
+            return roamingPath;
         }
-        var baseDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ConfigPath);
-        return File.Exists(baseDirectory) ? baseDirectory : string.Empty;
+
+        var localPath = GetLocalSettingsPath();
+        return File.Exists(localPath) ? localPath : string.Empty;
     }
 
+    /// <summary>
+    ///     Gets the path to the roaming settings file
+    /// </summary>
+    private static string GetRoamingSettingsPath()
+    {
+        return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), RoamingConfigPath);
+    }
+
+    /// <summary>
+    ///     Gets the path to the local settings file
+    /// </summary>
+    private static string GetLocalSettingsPath()
+    {
+        return Path.Combine(AppDomain.CurrentDomain.BaseDirectory, LocalConfigPath);
+    }
+
+    /// <summary>
+    ///     Sets default settings values
+    /// </summary>
     public static void SetDefaults()
     {
         Settings = new AppSettings
@@ -106,139 +90,239 @@ public static class SettingsHelper
             Theme = new Theme(),
             WindowProperties = new WindowProperties(),
             Zoom = new Zoom(),
-            StartUp = new StartUp()
+            StartUp = new StartUp(),
+            Version = CurrentSettingsVersion
         };
         // Get the default culture from the OS
         Settings.UIProperties.UserLanguage = CultureInfo.CurrentCulture.Name;
     }
 
+    /// <summary>
+    ///     Deletes all settings files
+    /// </summary>
     public static void DeleteSettingFiles()
     {
         try
         {
-            var appDataPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), RoamingConfigPath);
-            if (File.Exists(appDataPath))
-            {
-                File.Delete(appDataPath);
-            }
-
-            var baseDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ConfigPath);
-            if (File.Exists(baseDirectory))
-            {
-                File.Delete(baseDirectory);
-            }
+            DeleteFileIfExists(GetRoamingSettingsPath());
+            DeleteFileIfExists(GetLocalSettingsPath());
         }
         catch (Exception ex)
         {
-#if DEBUG
-            Trace.WriteLine($"{nameof(DeleteSettingFiles)} error deleting settings:\n {ex.Message}");
-#endif
+            LogError(nameof(DeleteSettingFiles), ex);
         }
     }
 
-    private static async Task PerformSave(string path)
+    /// <summary>
+    ///     Deletes a file if it exists
+    /// </summary>
+    private static void DeleteFileIfExists(string path)
     {
-        var updatedJson = JsonSerializer.Serialize(
-            Settings, typeof(AppSettings), SourceGenerationContext.Default);
-        await using var writer = new StreamWriter(path);
-        await writer.WriteAsync(updatedJson).ConfigureAwait(false);
+        if (File.Exists(path))
+        {
+            File.Delete(path);
+        }
     }
 
-    private static async Task PerformRead(string path)
-    {
-        var jsonString = await File.ReadAllTextAsync(path).ConfigureAwait(false);
-        var settings = JsonSerializer.Deserialize(
-                jsonString, typeof(AppSettings), SourceGenerationContext.Default)
-            as AppSettings;
-        Settings = await UpgradeSettings(settings);
-    }
-
-    public static async Task<bool> SaveSettingsAsync()
+    /// <summary>
+    ///     Loads settings from the specified path
+    /// </summary>
+    private static async Task<bool> LoadFromPathAsync(string path)
     {
         try
         {
-            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config/UserSettings.json");
-            await PerformSave(path).ConfigureAwait(false);
+            await ReadSettingsFromPathAsync(path).ConfigureAwait(false);
+            return true;
         }
-        catch (UnauthorizedAccessException ex)
+        catch (Exception)
         {
-            var path = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Ruben2776/PicView/Config/UserSettings.json");
-            if (!File.Exists(path))
+            // If primary path fails, try the alternative path
+            var alternativePath = Path.GetDirectoryName(path)?.Contains("ApplicationData") == true
+                ? GetLocalSettingsPath()
+                : GetRoamingSettingsPath();
+
+            if (File.Exists(alternativePath))
             {
-                var fileInfo = new FileInfo(path);
-                fileInfo.Directory?.Create();
+                try
+                {
+                    await ReadSettingsFromPathAsync(alternativePath).ConfigureAwait(false);
+                    return true;
+                }
+                catch (Exception)
+                {
+                    SetDefaults();
+                }
             }
+            else
+            {
+                SetDefaults();
+            }
+
+            return false;
+        }
+    }
+
+    /// <summary>
+    ///     Reads settings from the specified path and upgrades them if necessary
+    /// </summary>
+    private static async Task ReadSettingsFromPathAsync(string path)
+    {
+        var jsonString = await File.ReadAllTextAsync(path).ConfigureAwait(false);
+
+        if (JsonSerializer.Deserialize(
+                jsonString, typeof(AppSettings), SourceGenerationContext.Default) is not AppSettings settings)
+        {
+            throw new JsonException("Failed to deserialize settings");
+        }
+
+        Settings = await UpgradeSettingsIfNeededAsync(settings).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Saves settings to disk
+    /// </summary>
+    public static async Task<bool> SaveSettingsAsync()
+    {
+        if (Settings == null)
+        {
+            return false;
+        }
+
+        try
+        {
+            // Try to save to local directory first
+            var localPath = GetLocalSettingsPath();
+            await SaveSettingsToPathAsync(localPath).ConfigureAwait(false);
+            return true;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            // If unauthorized, try saving to roaming app data
             try
             {
-                await PerformSave(path).ConfigureAwait(false);
+                var roamingPath = GetRoamingSettingsPath();
+                EnsureDirectoryExists(roamingPath);
+                await SaveSettingsToPathAsync(roamingPath).ConfigureAwait(false);
+                return true;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-                Trace.WriteLine($"{nameof(SaveSettingsAsync)} error saving settings:\n {ex.Message}");
+                LogError(nameof(SaveSettingsAsync), ex);
                 return false;
             }
         }
         catch (Exception ex)
         {
-            Trace.WriteLine($"{nameof(SaveSettingsAsync)} error saving settings:\n {ex.Message}");
+            LogError(nameof(SaveSettingsAsync), ex);
             return false;
         }
-        return true;
     }
 
-    private static async Task<AppSettings> UpgradeSettings(AppSettings settings)
+    /// <summary>
+    ///     Ensures that the directory for a file path exists
+    /// </summary>
+    private static void EnsureDirectoryExists(string filePath)
+    {
+        var directory = Path.GetDirectoryName(filePath);
+        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+    }
+
+    /// <summary>
+    ///     Saves settings to the specified path
+    /// </summary>
+    private static async Task SaveSettingsToPathAsync(string path)
+    {
+        if (Settings == null)
+        {
+            return;
+        }
+
+        var json = JsonSerializer.Serialize(Settings, typeof(AppSettings), SourceGenerationContext.Default);
+        await File.WriteAllTextAsync(path, json).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Upgrades settings to the current version if needed
+    /// </summary>
+    private static async Task<AppSettings> UpgradeSettingsIfNeededAsync(AppSettings settings)
     {
         if (settings.Version >= CurrentSettingsVersion)
         {
             return settings;
         }
 
-        await SynchronizeSettings(settings).ConfigureAwait(false);
-
+        await SynchronizeSettingsAsync(settings).ConfigureAwait(false);
         settings.Version = CurrentSettingsVersion;
 
         return settings;
     }
 
-    private static async Task SynchronizeSettings(AppSettings settings)
+    /// <summary>
+    ///     Synchronizes settings between different versions
+    /// </summary>
+    private static async Task SynchronizeSettingsAsync(AppSettings newSettings)
     {
         try
         {
-            var path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Config/UserSettings.json");
-            if (!File.Exists(path))
+            var localPath = GetLocalSettingsPath();
+            if (!File.Exists(localPath))
             {
                 return;
             }
 
-            var jsonString = await File.ReadAllTextAsync(path).ConfigureAwait(false);
+            var jsonString = await File.ReadAllTextAsync(localPath).ConfigureAwait(false);
+            var existingSettings = JsonSerializer.Deserialize(
+                jsonString, typeof(AppSettings), SourceGenerationContext.Default) as AppSettings;
 
-            if (JsonSerializer.Deserialize(
-                    jsonString, typeof(AppSettings), SourceGenerationContext.Default) is not AppSettings existingSettings)
+            if (existingSettings == null)
             {
-                SetDefaults();
                 return;
             }
 
-            var properties = typeof(AppSettings).GetProperties();
-            foreach (var property in properties)
-            {
-                // Check if the property exists in the existing JSON
-                var jsonProperty = typeof(AppSettings).GetProperty(property.Name);
-                if (jsonProperty == null)
-                {
-                    // Property exists in C# class but not in JSON, initialize it
-                    property.SetValue(existingSettings, property.GetValue(settings));
-                }
-            }
+            // Copy new property values to existing settings when missing
+            MergeSettings(existingSettings, newSettings);
 
-            // Save the synchronized settings back to the JSON file
-            var updatedJson = JsonSerializer.Serialize(
-                existingSettings, typeof(AppSettings), SourceGenerationContext.Default);
-            await File.WriteAllTextAsync(path, updatedJson).ConfigureAwait(false);
+            // Save the synchronized settings
+            Settings = existingSettings;
+            await SaveSettingsToPathAsync(localPath).ConfigureAwait(false);
         }
         catch (Exception ex)
         {
-            Trace.WriteLine($"{nameof(SynchronizeSettings)} error synchronizing settings:\n {ex.Message}");
+            LogError(nameof(SynchronizeSettingsAsync), ex);
         }
+    }
+
+    /// <summary>
+    ///     Merges settings by copying properties from newSettings to existingSettings
+    ///     where the property is missing or null in existingSettings
+    /// </summary>
+    private static void MergeSettings(AppSettings existingSettings, AppSettings newSettings)
+    {
+        foreach (var property in typeof(AppSettings).GetProperties())
+        {
+            var existingValue = property.GetValue(existingSettings);
+
+            if (existingValue != null)
+            {
+                continue;
+            }
+
+            var newValue = property.GetValue(newSettings);
+            property.SetValue(existingSettings, newValue);
+        }
+    }
+
+    /// <summary>
+    ///     Logs an error message
+    /// </summary>
+    private static void LogError(string methodName, Exception ex)
+    {
+#if DEBUG
+        Trace.WriteLine($"{nameof(SettingsHelper)}: {methodName} error: {ex.Message}");
+        Trace.WriteLine(ex.StackTrace);
+#endif
     }
 }

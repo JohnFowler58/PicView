@@ -2,6 +2,7 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
+using Avalonia.Threading;
 using PicView.Avalonia.Navigation;
 using PicView.Avalonia.UI;
 using PicView.Avalonia.ViewModels;
@@ -12,6 +13,8 @@ namespace PicView.Avalonia.FileSystem;
 
 public static class FilePicker
 {
+    private static readonly bool IsMacOS = RuntimeInformation.IsOSPlatform(OSPlatform.OSX);
+
     public static async Task SelectAndLoadFile(MainViewModel vm)
     {
         if (vm is null)
@@ -19,33 +22,28 @@ public static class FilePicker
             return;
         }
 
-        var file = await SelectFile();
+        var file = await SelectFile().ConfigureAwait(false);
         if (file is null)
         {
             return;
         }
-        
-        await Task.Run(() => NavigationManager.LoadPicFromStringAsync(file, vm));
+
+        await NavigationManager.LoadPicFromStringAsync(file, vm).ConfigureAwait(false);
     }
 
-    public static async Task<string?> SelectFile()
+    private static async Task<string?> SelectFile()
     {
-        var file = await SelectIStorageFile();
-        if (file is null)
-        {
-            return null;
-        }
-        
-        return RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? file.Path.AbsolutePath : file.Path.LocalPath;
+        var file = await SelectIStorageFile().ConfigureAwait(false);
+        return file?.Path.LocalPath;
     }
-    
-    public static async Task<IStorageFile?> SelectIStorageFile()
+
+    private static async Task<IStorageFile?> SelectIStorageFile()
     {
         try
         {
-            if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop ||
-                desktop.MainWindow?.StorageProvider is not { } provider)
-                throw new NullReferenceException("Missing StorageProvider instance.");
+            var provider = GetStorageProvider();
+            if (provider is null) return null;
+            
             var options = new FilePickerOpenOptions
             {
                 Title = $"{TranslationHelper.Translation.OpenFileDialog} - PicView",
@@ -65,16 +63,8 @@ public static class FilePicker
                     SvgFileType,
                     ArchiveFileType]
             };
-            IReadOnlyList<IStorageFile> files;
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-            {
-                files = await provider.OpenFilePickerAsync(new FilePickerOpenOptions());
-            }
-            else
-            {
-                files = await provider.OpenFilePickerAsync(options);
-            }
 
+            var files = await ExecuteOnUIThread(() => provider.OpenFilePickerAsync(options)).ConfigureAwait(false);
             return files?.Count >= 1 ? files[0] : null;
         }
         catch (Exception e)
@@ -82,13 +72,13 @@ public static class FilePicker
             #if DEBUG
             Console.WriteLine(e);
             #endif
-            await TooltipHelper.ShowTooltipMessageAsync(e);
+            await TooltipHelper.ShowTooltipMessageAsync(e).ConfigureAwait(false);
         }
 
         return null;
     }
 
-    private static FilePickerFileType AllFileType { get; } = new(TranslationHelper.GetTranslation("SupportedFiles")) // TODO: Get translation
+    private static FilePickerFileType AllFileType { get; } = new(TranslationHelper.GetTranslation("SupportedFiles"))
     {
         Patterns = SupportedFiles.ConvertFilesToGlobFormat(),
         AppleUniformTypeIdentifiers = ["public.image"],
@@ -97,106 +87,105 @@ public static class FilePicker
     
     private static FilePickerFileType AvifFileType { get; } = new(".avif")
     {
-        Patterns = new List<string>{"*.avif"},
-        AppleUniformTypeIdentifiers = ["public.image"], // TODO: Get AppleUniformTypeIdentifiers for avif
+        Patterns = ["*.avif"],
+        AppleUniformTypeIdentifiers = ["public.avif"],
         MimeTypes = ["image/avif"],
     };
     
     private static FilePickerFileType TiffFileType { get; } = new(".tiff")
     {
-        Patterns = new List<string>{"*.tiff", "*.tif"},
+        Patterns = ["*.tiff", "*.tif"],
         AppleUniformTypeIdentifiers = ["public.tiff"],
         MimeTypes = ["image/tiff"],
     };
     
     private static FilePickerFileType WebpFileType { get; } = new(".webp")
     {
-        Patterns = new List<string>{"*.webp"},
+        Patterns = ["*.webp"],
         AppleUniformTypeIdentifiers = ["org.webmproject.webp"],
         MimeTypes = ["image/webp"],
     };
     
     private static FilePickerFileType PngFileType { get; } = new(".png")
     {
-        Patterns = new List<string>{"*.png"},
+        Patterns = ["*.png"],
         AppleUniformTypeIdentifiers = ["public.png"],
         MimeTypes = ["image/png"],
     };
     
     private static FilePickerFileType JpegFileType { get; } = new(".jpg")
     {
-        Patterns = new List<string>{"*.jpg","*.jpeg, *.jfif"},
+        Patterns = ["*.jpg", "*.jpeg", "*.jfif"],
         AppleUniformTypeIdentifiers = ["public.jpeg"],
         MimeTypes = ["image/jpeg"],
     };
 
-    private static FilePickerFileType ArchiveFileType { get; } = new(TranslationHelper.GetTranslation("Archives")) // TODO: Get translation
+    private static FilePickerFileType ArchiveFileType { get; } = new(TranslationHelper.GetTranslation("Archives"))
     {
         Patterns = SupportedFiles.ConvertArchivesToGlobFormat(),
         AppleUniformTypeIdentifiers = ["public.archive"],
-        MimeTypes = ["archive/*"]
+        MimeTypes = ["application/zip", "application/x-rar-compressed", "application/x-tar", "application/x-7z-compressed"]
     };
     
     private static FilePickerFileType GifFileType { get; } = new(".gif")
     {
-        Patterns = new List<string>{"*.gif"},
+        Patterns = ["*.gif"],
         AppleUniformTypeIdentifiers = ["com.compuserve.gif"],
         MimeTypes = ["image/gif"],
     };
     
     private static FilePickerFileType BmpFileType { get; } = new(".bmp")
     {
-        Patterns = new List<string>{"*.bmp"},
+        Patterns = ["*.bmp"],
         AppleUniformTypeIdentifiers = ["com.microsoft.bmp"],
         MimeTypes = ["image/bmp"],
     };
     
     private static FilePickerFileType SvgFileType { get; } = new(".svg")
     {
-        Patterns = new List<string>{"*.svg"},
+        Patterns = ["*.svg"],
         AppleUniformTypeIdentifiers = ["public.svg-image"],
         MimeTypes = ["image/svg+xml"],
     };
     
     private static FilePickerFileType HeicFileType { get; } = new(".heic")
     {
-        Patterns = new List<string>{"*.heic"},
+        Patterns = ["*.heic"],
         AppleUniformTypeIdentifiers = ["public.heic"],
         MimeTypes = ["image/heic"],
     };
     
     private static FilePickerFileType HeifFileType { get; } = new(".heif")
     {
-        Patterns = new List<string>{"*.heif"},
+        Patterns = ["*.heif"],
         AppleUniformTypeIdentifiers = ["public.heif"],
         MimeTypes = ["image/heif"],
     };
 
     public static async Task PickAndSaveFileAsAsync(string? fileName, MainViewModel vm)
     {
-        var file = await PickFileForSavingAsync(fileName);
+        var file = await PickFileForSavingAsync(fileName).ConfigureAwait(false);
         if (file is null)
         {
             return;
         }
         
-        await FileSaverHelper.SaveFileAsync(fileName, file, vm);
+        await FileSaverHelper.SaveFileAsync(fileName, file, vm).ConfigureAwait(false);
     }
     
     public static async Task<string?> PickFileForSavingAsync(string? fileName, string? ext = null)
     {
         try
         {
-            if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop ||
-                desktop.MainWindow?.StorageProvider is not { } provider)
-                throw new NullReferenceException("Missing StorageProvider instance.");
+            var (provider, desktop) = GetProviderAndDesktop();
+            if (provider is null || desktop is null) return null;
         
-            var suggestedFileName = string.IsNullOrWhiteSpace(ext) ? Path.GetFileName(fileName) : Path.GetFileName(Path.ChangeExtension(fileName, ext));
+            var suggestedFileName = GetSuggestedFileName(fileName, ext);
 
             var options = new FilePickerSaveOptions
             {
                 Title = $"{TranslationHelper.Translation.OpenFileDialog} - PicView",
-                FileTypeChoices  = [
+                FileTypeChoices = [
                     FilePickerFileTypes.ImageAll,
                     JpegFileType,
                     PngFileType,
@@ -208,15 +197,12 @@ public static class FilePicker
                     HeicFileType,
                     HeifFileType,
                     SvgFileType],
-                SuggestedFileName = string.IsNullOrWhiteSpace(fileName) ? Path.GetRandomFileName() : suggestedFileName,
-                SuggestedStartLocation = await desktop.MainWindow.StorageProvider.TryGetFolderFromPathAsync(fileName)
-            
+                SuggestedFileName = suggestedFileName,
+                SuggestedStartLocation = await desktop.MainWindow.StorageProvider.TryGetFolderFromPathAsync(fileName).ConfigureAwait(false)
             };
-            var file = await provider.SaveFilePickerAsync(options);
-            var destination = RuntimeInformation.IsOSPlatform(OSPlatform.OSX)
-                ? file.Path.AbsolutePath
-                : file.Path.LocalPath;
-            return destination;
+            
+            var file = await ExecuteOnUIThread(() => provider.SaveFilePickerAsync(options)).ConfigureAwait(false);
+            return file?.Path.LocalPath;
         }
         catch (Exception e)
         {
@@ -229,9 +215,8 @@ public static class FilePicker
 
     public static async Task<string> SelectDirectory()
     {
-        if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop ||
-            desktop.MainWindow?.StorageProvider is not { } provider)
-            throw new NullReferenceException("Missing StorageProvider instance.");
+        var provider = GetStorageProvider();
+        if (provider is null) return string.Empty;
 
         var options = new FolderPickerOpenOptions
         {
@@ -239,16 +224,64 @@ public static class FilePicker
             AllowMultiple = false
         };
         
-        var directory = await provider.OpenFolderPickerAsync(options);
-        if (directory is null)
-        {
-            return "";
-        }
-        if (directory.Count <= 0)
-        {
-            return "";
-        }
-        return RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? directory[0].Path.AbsolutePath : directory[0].Path.LocalPath;
+        var directories = await ExecuteOnUIThread(() => provider.OpenFolderPickerAsync(options)).ConfigureAwait(false);
         
+        if (directories is null || directories.Count <= 0)
+        {
+            return string.Empty;
+        }
+        
+        return directories[0].Path.LocalPath;
+    }
+    
+    // Helper methods to reduce code duplication
+    
+    private static IStorageProvider? GetStorageProvider()
+    {
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop &&
+            desktop.MainWindow?.StorageProvider is { } provider)
+        {
+            return provider;
+        }
+#if DEBUG
+        Console.WriteLine("Missing StorageProvider instance.");
+#endif
+        return null;
+
+    }
+    
+    private static (IStorageProvider? Provider, IClassicDesktopStyleApplicationLifetime? Desktop) GetProviderAndDesktop()
+    {
+        if (Application.Current?.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop ||
+            desktop.MainWindow?.StorageProvider is not { } provider)
+        {
+            return (null, null);
+        }
+        
+        return (provider, desktop);
+    }
+    
+    private static string GetSuggestedFileName(string? fileName, string? ext)
+    {
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            return Path.GetRandomFileName();
+        }
+        
+        return string.IsNullOrWhiteSpace(ext) 
+            ? Path.GetFileName(fileName) 
+            : Path.GetFileName(Path.ChangeExtension(fileName, ext));
+    }
+    
+    private static async Task<T> ExecuteOnUIThread<T>(Func<Task<T>> action)
+    {
+        if (IsMacOS)
+        {
+            // Use Dispatcher to ensure we're on the UI thread for macOS
+            return await Dispatcher.UIThread.InvokeAsync(action).ConfigureAwait(false);
+        }
+        
+        // For other platforms, just execute directly
+        return await action().ConfigureAwait(false);
     }
 }

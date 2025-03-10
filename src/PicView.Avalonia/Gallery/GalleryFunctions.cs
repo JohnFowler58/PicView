@@ -198,9 +198,6 @@ public static class GalleryFunctions
         {
             Dispatcher.UIThread.Post(ClearItems);
         }
-#if DEBUG
-        Console.WriteLine("Gallery items cleared");
-#endif
 
         return;
 
@@ -210,7 +207,7 @@ public static class GalleryFunctions
             {
                 var mainView = UIHelper.GetMainView;
 
-                var galleryListBox = mainView.GalleryView.GalleryListBox;
+                var galleryListBox = mainView?.GalleryView.GalleryListBox;
                 if (galleryListBox == null)
                 {
                     return;
@@ -232,6 +229,9 @@ public static class GalleryFunctions
                 }
 
                 galleryListBox.Items.Clear();
+#if DEBUG
+                Console.WriteLine("Gallery items cleared");
+#endif
             }
             catch (Exception e)
             {
@@ -283,7 +283,7 @@ public static class GalleryFunctions
             return;
         }
 
-        UIHelper.CloseMenus(vm);
+        MenuManager.CloseMenus(vm);
         if (Settings.Gallery.IsBottomGalleryShown)
         {
             // Showing bottom gallery is enabled
@@ -332,7 +332,7 @@ public static class GalleryFunctions
             return;
         }
 
-        UIHelper.CloseMenus(vm);
+        MenuManager.CloseMenus(vm);
 
         if (Settings.Gallery.IsBottomGalleryShown)
         {

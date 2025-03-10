@@ -72,7 +72,7 @@ public static class KeybindingManager
                 {
                     continue;
                 }
-                var function = await FunctionsHelper.GetFunctionByName(kvp.Value).ConfigureAwait(false);
+                var function = await FunctionsMapper.GetFunctionByName(kvp.Value).ConfigureAwait(false);
                 // Add to the dictionary
                 CustomShortcuts[gesture] = function;
             }

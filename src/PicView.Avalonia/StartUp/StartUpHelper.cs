@@ -16,6 +16,7 @@ using PicView.Avalonia.Views;
 using PicView.Avalonia.WindowBehavior;
 using PicView.Core.Calculations;
 using PicView.Core.Gallery;
+using PicView.Core.Navigation;
 using PicView.Core.ProcessHandling;
 
 namespace PicView.Avalonia.StartUp;
@@ -116,15 +117,6 @@ public static class StartUpHelper
         HandleWindowControlSettings(vm, desktop);
         ValidateGallerySettings(vm, settingsExists);
         SetWindowEventHandlers(window);
-        UIHelper.AddMenus();
-
-        Application.Current.Name = "PicView";
-
-        if (Settings.UIProperties.OpenInSameWindow)
-        {
-            // No other instance is running, create named pipe server
-            _ = IPC.StartListeningForArguments(vm);
-        }
         
         // Fixes incorrect fullscreen window
         if (Settings.WindowProperties.Fullscreen)
@@ -136,6 +128,17 @@ public static class StartUpHelper
             }, DispatcherPriority.ApplicationIdle).Wait();
             WindowFunctions.Fullscreen(vm, desktop);
         }
+        
+        if (Settings.UIProperties.OpenInSameWindow)
+        {
+            // No other instance is running, create named pipe server
+            _ = IPC.StartListeningForArguments(vm);
+        }
+        
+        MenuManager.AddMenus();
+        FileHistory.Initialize();
+
+        Application.Current.Name = "PicView";
     }
 
     private static void HandleThemeUpdates(MainViewModel vm)
@@ -178,8 +181,7 @@ public static class StartUpHelper
         {
             if (string.IsNullOrWhiteSpace(Settings.StartUp.LastFile))
             {
-                vm.CurrentView = new StartUpMenu();
-                vm.IsLoading = false;
+                ErrorHandling.ShowStartUpMenu(vm);
             }
             else
             {
@@ -189,8 +191,7 @@ public static class StartUpHelper
         }
         else
         {
-            vm.CurrentView = new StartUpMenu();
-            vm.IsLoading = false;
+            ErrorHandling.ShowStartUpMenu(vm);
         }
     }
 
@@ -309,7 +310,8 @@ public static class StartUpHelper
         vm.GetSlideshowSpeed = Settings.UIProperties.SlideShowTimer;
         vm.GetZoomSpeed = Settings.Zoom.ZoomSpeed;
         vm.IsShowingSideBySide = Settings.ImageScaling.ShowImageSideBySide;
-        vm.IsGalleryShown = Settings.Gallery.ShowBottomGalleryInHiddenUI;
+        vm.IsBottomGalleryShown = Settings.Gallery.IsBottomGalleryShown;
+        vm.IsBottomGalleryShownInHiddenUI = Settings.Gallery.ShowBottomGalleryInHiddenUI;
         vm.IsAvoidingZoomingOut  = Settings.Zoom.AvoidZoomingOut;
         vm.IsUIShown  = Settings.UIProperties.ShowInterface;
         vm.IsTopToolbarShown  = Settings.UIProperties.ShowInterface;
@@ -335,5 +337,11 @@ public static class StartUpHelper
         w.KeyDown += async (_, e) => await MainKeyboardShortcuts.MainWindow_KeysDownAsync(e).ConfigureAwait(false);
         w.KeyUp += (_, e) => MainKeyboardShortcuts.MainWindow_KeysUp(e);
         w.PointerPressed += async (_, e) => await MouseShortcuts.MainWindow_PointerPressed(e).ConfigureAwait(false);
+        
+        w.Deactivated += delegate
+        {
+            MainKeyboardShortcuts.Reset();
+            MainKeyboardShortcuts.ClearKeyDownModifiers();
+        };
     }
 }

@@ -54,6 +54,6 @@ public partial class KeybindingsView : UserControl
             window.Close();
         });
 
-        await FunctionsHelper.KeybindingsWindow();
+        await FunctionsMapper.KeybindingsWindow();
     }
 }

@@ -151,6 +151,7 @@
 
         <Style Selector="^:selected /template/ ContentPresenter#PART_HeaderPresenter">
             <Setter Property="Foreground" Value="{StaticResource SecondaryTextColor}" />
+            <Setter Property="Effect" Value="{StaticResource TextShadow}" />
         </Style>
 
         <Style Selector="^:nth-child(1) /template/ Border#root">
@@ -174,7 +175,17 @@
         </Style>
 
         <Style Selector="^:disabled">
-            <Setter Property="Opacity" Value="{DynamicResource ThemeDisabledOpacity}" />
+            <Setter Property="Opacity" Value="{StaticResource ThemeDisabledOpacity}" />
+        </Style>
+
+        <Style Selector="^.active /template/ Border#root">
+            <Setter Property="Background" Value="{DynamicResource SecondaryAccentColor}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource SecondaryAccentColor}" />
+        </Style>
+
+        <Style Selector="^.active /template/ ContentPresenter#PART_HeaderPresenter">
+            <Setter Property="Foreground" Value="{StaticResource SecondaryTextColor}" />
+            <Setter Property="Effect" Value="{StaticResource TextShadow}" />
         </Style>
 
 

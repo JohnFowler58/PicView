@@ -70,7 +70,7 @@ public class AnimatedPopUp : ContentControl
 
     public async Task AnimatedOpening()
     {
-        UIHelper.IsDialogOpen = true;
+        DialogManager.IsDialogOpen = true;
         var fadeIn = AnimationsHelper.OpacityAnimation(0, 1, 0.3);
         var centering = AnimationsHelper.CenteringAnimation(50, 100, 0, 0, 0.3);
         await Task.WhenAll(fadeIn.RunAsync(_partOverlay), fadeIn.RunAsync(_partBorder),
@@ -79,7 +79,7 @@ public class AnimatedPopUp : ContentControl
 
     public async Task AnimatedClosing()
     {
-        UIHelper.IsDialogOpen = false;
+        DialogManager.IsDialogOpen = false;
         var fadeIn = AnimationsHelper.OpacityAnimation(1, 0, 0.3);
         var centering = AnimationsHelper.CenteringAnimation(0, 0, 50, 100, 0.3);
         await Task.WhenAll(fadeIn.RunAsync(_partOverlay), fadeIn.RunAsync(_partBorder),

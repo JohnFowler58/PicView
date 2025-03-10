@@ -2,7 +2,7 @@
 using Avalonia;
 using Avalonia.Media.Imaging;
 using ImageMagick;
-using PicView.Avalonia.Clipboard;
+using PicView.Avalonia.Animations;
 using PicView.Avalonia.Crop;
 using PicView.Avalonia.FileSystem;
 using PicView.Avalonia.ImageHandling;
@@ -156,7 +156,7 @@ public class ImageCropperViewModel : ViewModelBase
 
         if (bitmap is not null)
         {
-            await Task.WhenAll(vm.PlatformService.CopyImageToClipboard(bitmap), ClipboardHelper.CopyAnimation());
+            await Task.WhenAll(vm.PlatformService.CopyImageToClipboard(bitmap), AnimationsHelper.CopyAnimation());
         }
     }
 

@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Reactive;
+﻿using System.Reactive;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Primitives;
@@ -7,12 +6,13 @@ using Avalonia.Layout;
 using Avalonia.Media;
 using PicView.Avalonia.Clipboard;
 using PicView.Avalonia.Converters;
+using PicView.Avalonia.FileSystem;
 using PicView.Avalonia.Gallery;
 using PicView.Avalonia.ImageEffects;
 using PicView.Avalonia.ImageHandling;
 using PicView.Avalonia.ImageTransformations;
 using PicView.Avalonia.Interfaces;
-using PicView.Avalonia.Navigation;
+using PicView.Avalonia.LockScreen;
 using PicView.Avalonia.UI;
 using PicView.Avalonia.Wallpaper;
 using PicView.Avalonia.WindowBehavior;
@@ -20,7 +20,6 @@ using PicView.Core.Calculations;
 using PicView.Core.Config;
 using PicView.Core.FileHandling;
 using PicView.Core.Gallery;
-using PicView.Core.Localization;
 using PicView.Core.ProcessHandling;
 using ReactiveUI;
 using ImageViewer = PicView.Avalonia.Views.ImageViewer;
@@ -30,7 +29,262 @@ namespace PicView.Avalonia.ViewModels;
 public class MainViewModel : ViewModelBase
 {
     public readonly IPlatformSpecificService? PlatformService;
-    
+
+    public MainViewModel(IPlatformSpecificService? platformSpecificService)
+    {
+        FunctionsMapper.Vm = this;
+        PlatformService = platformSpecificService;
+
+        #region Window commands
+
+        ExitCommand = ReactiveCommand.CreateFromTask(WindowFunctions.Close);
+        MinimizeCommand = ReactiveCommand.CreateFromTask(WindowFunctions.Minimize);
+        MaximizeCommand = ReactiveCommand.CreateFromTask(WindowFunctions.MaximizeRestore);
+        RestoreCommand = ReactiveCommand.Create(WindowFunctions.Restore);
+        ToggleFullscreenCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.ToggleFullscreen);
+        NewWindowCommand = ReactiveCommand.Create(ProcessHelper.StartNewProcess);
+
+        ShowExifWindowCommand = ReactiveCommand.Create(platformSpecificService.ShowExifWindow);
+        ShowSettingsWindowCommand = ReactiveCommand.Create(platformSpecificService.ShowSettingsWindow);
+        ShowKeybindingsWindowCommand = ReactiveCommand.Create(platformSpecificService.ShowKeybindingsWindow);
+        ShowAboutWindowCommand = ReactiveCommand.Create(platformSpecificService.ShowAboutWindow);
+        ShowBatchResizeWindowCommand = ReactiveCommand.Create(platformSpecificService.ShowBatchResizeWindow);
+        ShowSingleImageResizeWindowCommand =
+            ReactiveCommand.Create(platformSpecificService.ShowSingleImageResizeWindow);
+        ShowEffectsWindowCommand = ReactiveCommand.Create(platformSpecificService.ShowEffectsWindow);
+
+        #endregion Window commands
+
+        #region Navigation Commands
+
+        NextCommand = ReactiveCommand.Create(() => { Task.Run(FunctionsMapper.Next); });
+
+        NextButtonCommand = ReactiveCommand.Create(() => { UIHelper.NextButtonNavigation(this); });
+
+        NextArrowButtonCommand = ReactiveCommand.Create(() => { UIHelper.NextArrowButtonNavigation(this); });
+
+        NextFolderCommand = ReactiveCommand.Create(() => { Task.Run(FunctionsMapper.NextFolder); });
+
+        PreviousCommand = ReactiveCommand.Create(() => { Task.Run(FunctionsMapper.Prev); });
+
+        PreviousButtonCommand = ReactiveCommand.Create(() => { UIHelper.PreviousButtonNavigation(this); });
+
+        PreviousArrowButtonCommand = ReactiveCommand.Create(() => { UIHelper.PreviousArrowButtonNavigation(this); });
+
+        PreviousFolderCommand = ReactiveCommand.Create(() => { Task.Run(FunctionsMapper.PrevFolder); });
+
+        Skip10Command = ReactiveCommand.CreateFromTask(FunctionsMapper.Next10);
+
+        Skip100Command = ReactiveCommand.CreateFromTask(FunctionsMapper.Next100);
+
+        Prev10Command = ReactiveCommand.CreateFromTask(FunctionsMapper.Prev10);
+
+        Prev100Command = ReactiveCommand.CreateFromTask(FunctionsMapper.Prev100);
+
+        FirstCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.First);
+
+        LastCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.Last);
+
+        ReloadCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.Reload);
+
+        #endregion Navigation Commands
+
+        #region Sort Commands
+
+        SortFilesByNameCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.SortFilesByName);
+
+        SortFilesByCreationTimeCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.SortFilesByCreationTime);
+
+        SortFilesByLastAccessTimeCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.SortFilesByLastAccessTime);
+
+        SortFilesBySizeCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.SortFilesBySize);
+
+        SortFilesByExtensionCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.SortFilesByExtension);
+
+        SortFilesRandomlyCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.SortFilesRandomly);
+
+        SortFilesAscendingCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.SortFilesAscending);
+
+        SortFilesDescendingCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.SortFilesDescending);
+
+        #endregion Sort Commands
+
+        #region Menus
+
+        CloseMenuCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.CloseMenus);
+
+        ToggleFileMenuCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.ToggleFileMenu);
+
+        ToggleImageMenuCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.ToggleImageMenu);
+
+        ToggleSettingsMenuCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.ToggleSettingsMenu);
+
+        ToggleToolsMenuCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.ToggleToolsMenu);
+
+        #endregion Menus
+
+        #region Image commands
+
+        RotateLeftCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.RotateLeft);
+        RotateLeftButtonCommand = ReactiveCommand.CreateFromTask(async () =>
+        {
+            await Rotation.RotateLeft(this, Rotation.RotationButton.RotateLeftButton);
+        });
+
+        RotateRightCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.RotateRight);
+        RotateRightButtonCommand = ReactiveCommand.CreateFromTask(async () =>
+        {
+            await Rotation.RotateRight(this, Rotation.RotationButton.RotateRightButton);
+        });
+
+        RotateRightWindowBorderButtonCommand = ReactiveCommand.CreateFromTask(async () =>
+        {
+            await Rotation.RotateRight(this, Rotation.RotationButton.WindowBorderButton);
+        });
+
+        FlipCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.Flip);
+
+        StretchCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.Stretch);
+
+        CropCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.Crop);
+
+        ToggleScrollCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.ToggleScroll);
+
+        OptimizeImageCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.OptimizeImage);
+
+        ChangeBackgroundCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.ChangeBackground);
+
+        ShowSideBySideCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.SideBySide);
+
+        #endregion Image commands
+
+        #region File commands
+
+        OpenFileCommand = ReactiveCommand.Create(() => { Task.Run(FunctionsMapper.Open); });
+
+        OpenLastFileCommand = ReactiveCommand.Create(() => { Task.Run(FunctionsMapper.OpenLastFile); });
+
+        SaveFileCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.Save);
+
+        SaveFileAsCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.SaveAs);
+
+        CopyFileCommand = ReactiveCommand.CreateFromTask<string>(CopyFileTask);
+
+        CopyFilePathCommand = ReactiveCommand.CreateFromTask<string>(CopyFilePathTask);
+
+        FilePropertiesCommand = ReactiveCommand.CreateFromTask<string>(ShowFilePropertiesTask);
+
+        CopyImageCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.CopyImage);
+
+        CopyBase64Command = ReactiveCommand.CreateFromTask<string>(CopyBase64Task);
+
+        CutCommand = ReactiveCommand.CreateFromTask<string>(CutFileTask);
+
+        PasteCommand = ReactiveCommand.Create(() => { Task.Run(FunctionsMapper.Paste); });
+
+        OpenWithCommand = ReactiveCommand.CreateFromTask<string>(OpenWithTask);
+
+        RenameCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.Rename);
+
+        ResizeCommand = ReactiveCommand.CreateFromTask<int>(ResizeImageByPercentage);
+        ConvertCommand = ReactiveCommand.CreateFromTask<int>(ConvertFileExtension);
+
+        DuplicateFileCommand = ReactiveCommand.CreateFromTask<string>(DuplicateFileTask);
+
+        PrintCommand = ReactiveCommand.CreateFromTask<string>(PrintTask);
+
+        DeleteFileCommand = ReactiveCommand.CreateFromTask<string>(DeleteFileTask);
+
+        RecycleFileCommand = ReactiveCommand.CreateFromTask<string>(RecycleFileTask);
+
+        LocateOnDiskCommand = ReactiveCommand.CreateFromTask<string>(LocateOnDiskTask);
+
+        SetAsWallpaperCommand = ReactiveCommand.CreateFromTask<string>(SetAsWallpaperTask);
+        SetAsWallpaperTiledCommand = ReactiveCommand.CreateFromTask<string>(SetAsWallpaperTiledTask);
+        SetAsWallpaperStretchedCommand = ReactiveCommand.CreateFromTask<string>(SetAsWallpaperStretchedTask);
+        SetAsWallpaperCenteredCommand = ReactiveCommand.CreateFromTask<string>(SetAsWallpaperCenteredTask);
+        SetAsWallpaperFilledCommand = ReactiveCommand.CreateFromTask<string>(SetAsWallpaperFilledTask);
+
+        SetAsLockScreenCommand = ReactiveCommand.CreateFromTask<string>(SetAsLockScreenTask);
+
+        #endregion File commands
+
+        #region EXIF commands
+
+        SetExifRating0Command = ReactiveCommand.CreateFromTask(FunctionsMapper.Set0Star);
+        SetExifRating1Command = ReactiveCommand.CreateFromTask(FunctionsMapper.Set1Star);
+        SetExifRating2Command = ReactiveCommand.CreateFromTask(FunctionsMapper.Set2Star);
+        SetExifRating3Command = ReactiveCommand.CreateFromTask(FunctionsMapper.Set3Star);
+        SetExifRating4Command = ReactiveCommand.CreateFromTask(FunctionsMapper.Set4Star);
+        SetExifRating5Command = ReactiveCommand.CreateFromTask(FunctionsMapper.Set5Star);
+
+        OpenGoogleLinkCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.OpenGoogleMaps);
+        OpenBingLinkCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.OpenBingMaps);
+
+        #endregion EXIF commands
+
+        #region Gallery Commands
+
+        ToggleGalleryCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.ToggleGallery);
+
+        ToggleBottomGalleryCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.OpenCloseBottomGallery);
+
+        CloseGalleryCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.CloseGallery);
+
+        GalleryItemStretchCommand = ReactiveCommand.Create<string>(SetGalleryItemStretch);
+
+        #endregion Gallery Commands
+
+        #region UI Commands
+
+        ToggleUICommand = ReactiveCommand.CreateFromTask(FunctionsMapper.ToggleInterface);
+
+        ToggleBottomNavBarCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.ToggleBottomToolbar);
+
+        ToggleBottomGalleryShownInHiddenUICommand = ReactiveCommand.CreateFromTask(async () =>
+        {
+            await HideInterfaceLogic.ToggleBottomGalleryShownInHiddenUI(this);
+        });
+
+        ToggleFadeInButtonsOnHoverCommand = ReactiveCommand.CreateFromTask(async () =>
+        {
+            await HideInterfaceLogic.ToggleFadeInButtonsOnHover(this);
+        });
+
+        ChangeCtrlZoomCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.ChangeCtrlZoom);
+
+        ColorPickerCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.ColorPicker);
+
+        SlideshowCommand = ReactiveCommand.CreateFromTask<int>(StartSlideShowTask);
+
+        ToggleTaskbarProgressCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.ToggleTaskbarProgress);
+
+        #endregion UI Commands
+
+        #region Settings commands
+
+        ChangeAutoFitCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.AutoFitWindow);
+
+        ChangeTopMostCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.SetTopMost);
+
+        ToggleSubdirectoriesCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.ToggleSubdirectories);
+
+        ToggleLoopingCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.ToggleLooping);
+
+        ResetSettingsCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.ResetSettings);
+
+        RestartCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.Restart);
+
+        ToggleUsingTouchpadCommand = ReactiveCommand.CreateFromTask(FunctionsMapper.ToggleUsingTouchpad);
+
+        #endregion Settings commands
+    }
+
+    public MainViewModel()
+    {
+        // Only use for unit test
+    }
+
     #region Image
 
     public object? ImageSource
@@ -92,13 +346,13 @@ public class MainViewModel : ViewModelBase
         get;
         set => this.RaiseAndSetIfChanged(ref field, value);
     } = double.NaN;
-    
+
     public double AspectRatio
     {
         get;
         set => this.RaiseAndSetIfChanged(ref field, value);
     }
-    
+
     public ImageEffectConfig? EffectConfig
     {
         get;
@@ -115,7 +369,7 @@ public class MainViewModel : ViewModelBase
         set => this.RaiseAndSetIfChanged(ref field, value);
     }
 
-    public bool IsGalleryShown
+    public bool IsBottomGalleryShown
     {
         get;
         set => this.RaiseAndSetIfChanged(ref field, value);
@@ -180,12 +434,16 @@ public class MainViewModel : ViewModelBase
 
             if (SettingsHelper.Settings.WindowProperties.Fullscreen)
             {
-                return SettingsHelper.Settings.Gallery.IsBottomGalleryShown ? GetBottomGalleryItemHeight + SizeDefaults.ScrollbarSize : 0;
+                return SettingsHelper.Settings.Gallery.IsBottomGalleryShown
+                    ? GetBottomGalleryItemHeight + SizeDefaults.ScrollbarSize
+                    : 0;
             }
+
             if (!SettingsHelper.Settings.Gallery.ShowBottomGalleryInHiddenUI && !IsUIShown)
             {
                 return 0;
             }
+
             return GetBottomGalleryItemHeight + SizeDefaults.ScrollbarSize;
         }
     }
@@ -218,16 +476,17 @@ public class MainViewModel : ViewModelBase
     {
         get => GalleryDefaults.MaxFullGalleryItemHeight;
     }
-    
+
     public double MinFullGalleryItemHeight
     {
         get => GalleryDefaults.MinFullGalleryItemHeight;
     }
+
     public double MaxBottomGalleryItemHeight
     {
         get => GalleryDefaults.MaxBottomGalleryItemHeight;
     }
-    
+
     public double MinBottomGalleryItemHeight
     {
         get => GalleryDefaults.MinBottomGalleryItemHeight;
@@ -358,7 +617,7 @@ public class MainViewModel : ViewModelBase
     public ReactiveCommand<Unit, Unit>? ExitCommand { get; }
     public ReactiveCommand<Unit, Unit>? MinimizeCommand { get; }
     public ReactiveCommand<Unit, Unit>? MaximizeCommand { get; }
-    
+
     public ReactiveCommand<Unit, Unit>? RestoreCommand { get; }
     public ReactiveCommand<Unit, Unit>? ToggleFullscreenCommand { get; }
     public ReactiveCommand<Unit, Unit>? NextCommand { get; }
@@ -417,7 +676,7 @@ public class MainViewModel : ViewModelBase
     public ReactiveCommand<Unit, Unit>? ChangeBackgroundCommand { get; }
     public ReactiveCommand<Unit, Unit>? ToggleBottomNavBarCommand { get; }
     public ReactiveCommand<Unit, Unit>? ToggleBottomGalleryShownInHiddenUICommand { get; }
-    
+
     public ReactiveCommand<Unit, Unit>? ToggleFadeInButtonsOnHoverCommand { get; }
     public ReactiveCommand<Unit, Unit>? ToggleTaskbarProgressCommand { get; }
     public ReactiveCommand<Unit, Unit>? ShowExifWindowCommand { get; }
@@ -460,21 +719,21 @@ public class MainViewModel : ViewModelBase
     public ReactiveCommand<Unit, Unit>? ColorPickerCommand { get; }
 
     public ReactiveCommand<int, Unit>? SlideshowCommand { get; }
-    
+
     public ReactiveCommand<string, Unit>? SetAsWallpaperCommand { get; }
     public ReactiveCommand<string, Unit>? SetAsWallpaperFilledCommand { get; }
     public ReactiveCommand<string, Unit>? SetAsWallpaperStretchedCommand { get; }
     public ReactiveCommand<string, Unit>? SetAsWallpaperTiledCommand { get; }
     public ReactiveCommand<string, Unit>? SetAsWallpaperCenteredCommand { get; }
-    
+
     public ReactiveCommand<string, Unit>? SetAsLockScreenCommand { get; }
-    
+
     public ReactiveCommand<string, Unit>? GalleryItemStretchCommand { get; }
-    
+
     public ReactiveCommand<Unit, Unit>? ResetSettingsCommand { get; }
-    
+
     public ReactiveCommand<Unit, Unit>? ShowSideBySideCommand { get; }
-    
+
     public ReactiveCommand<Unit, Unit>? RestartCommand { get; }
 
     #endregion Commands
@@ -482,13 +741,13 @@ public class MainViewModel : ViewModelBase
     #region Fields
 
     #region Booleans
-    
+
     public bool ShouldCropBeEnabled
     {
         get;
         set => this.RaiseAndSetIfChanged(ref field, value);
     }
-    
+
     public bool ShouldOptimizeImageBeEnabled
     {
         get;
@@ -551,7 +810,7 @@ public class MainViewModel : ViewModelBase
             ShouldMaximizeBeShown = !IsFullscreen && !IsMaximized;
         }
     }
-    
+
     public bool IsMaximized
     {
         get;
@@ -562,7 +821,7 @@ public class MainViewModel : ViewModelBase
             ShouldMaximizeBeShown = !IsFullscreen && !IsMaximized;
         }
     }
-    
+
     public bool ShouldRestore
     {
         get;
@@ -585,7 +844,7 @@ public class MainViewModel : ViewModelBase
     {
         get;
         set => this.RaiseAndSetIfChanged(ref field, value);
-    } 
+    }
 
     public bool IsScrollingEnabled
     {
@@ -602,7 +861,7 @@ public class MainViewModel : ViewModelBase
             SettingsHelper.Settings.ImageScaling.StretchImage = value;
             WindowResizing.SetSize(this);
         }
-    } 
+    }
 
     public bool IsLooping
     {
@@ -635,7 +894,7 @@ public class MainViewModel : ViewModelBase
             SettingsHelper.Settings.UIProperties.OpenInSameWindow = value;
         }
     }
-    
+
     public bool IsShowingConfirmationOnEsc
     {
         get;
@@ -663,7 +922,7 @@ public class MainViewModel : ViewModelBase
     }
 
     #endregion Booleans
-    
+
     public Thickness TopScreenMargin
     {
         get;
@@ -675,13 +934,13 @@ public class MainViewModel : ViewModelBase
         get;
         set => this.RaiseAndSetIfChanged(ref field, value);
     }
-    
+
     public CornerRadius BottomCornerRadius
     {
         get;
         set => this.RaiseAndSetIfChanged(ref field, value);
     }
-    
+
     public int BackgroundChoice
     {
         get;
@@ -690,23 +949,19 @@ public class MainViewModel : ViewModelBase
 
     public double WindowMinSize
     {
-        get
-        {
-            return SizeDefaults.WindowMinSize;
-        }
+        get { return SizeDefaults.WindowMinSize; }
     }
 
     public double TitlebarHeight
     {
         get;
         set => this.RaiseAndSetIfChanged(ref field, value);
-    } 
+    }
 
     public double BottombarHeight
     {
         get;
         set => this.RaiseAndSetIfChanged(ref field, value);
-        
     }
 
     // Used to flip the flip button
@@ -745,12 +1000,12 @@ public class MainViewModel : ViewModelBase
             this.RaiseAndSetIfChanged(ref field, roundedValue);
             SettingsHelper.Settings.UIProperties.SlideShowTimer = roundedValue;
         }
-    } 
+    }
 
     public double GetNavSpeed
     {
         get => Math.Round(field, 2);
-        set 
+        set
         {
             this.RaiseAndSetIfChanged(ref field, value);
             SettingsHelper.Settings.UIProperties.NavSpeed = value;
@@ -766,7 +1021,7 @@ public class MainViewModel : ViewModelBase
             this.RaiseAndSetIfChanged(ref field, roundedValue);
             SettingsHelper.Settings.Zoom.ZoomSpeed = roundedValue;
         }
-    } 
+    }
 
     #region strings
 
@@ -1216,700 +1471,70 @@ public class MainViewModel : ViewModelBase
 
     #endregion Sorting Order
 
-    private async Task ResizeImageByPercentage(int percentage)
-    {
-        SetTitleHelper.SetLoadingTitle(this);
-        var success = await ConversionHelper.ResizeImageByPercentage(FileInfo, percentage);
-        if (success)
-        {
-            await NavigationManager.QuickReload();
-        }
-        else
-        {
-            SetTitleHelper.SetTitle(this);
-        }
-    }
+    private async Task ResizeImageByPercentage(int percentage) =>
+        await ConversionHelper.ResizeImageByPercentage(percentage, this).ConfigureAwait(false);
 
-    private async Task ConvertFileExtension(int index)
-    {
-        if (FileInfo is null)
-        {
-            return;
-        }
+    private async Task ConvertFileExtension(int index) =>
+        await ConversionHelper.ConvertFileExtension(index, this).ConfigureAwait(false);
 
-        var newPath = await ConversionHelper.ConvertTask(FileInfo, index);
-        if (!string.IsNullOrWhiteSpace(newPath))
-        {
-            await NavigationManager.LoadPicFromStringAsync(newPath, this);
-        }
-    }
-    
-    private async Task CopyFileTask(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return;
-        }
-        if (PlatformService is null)
-        {
-            return;
-        }
-        await ClipboardHelper.CopyFileToClipboard(path, this);
-    }
-    
-    private async Task CopyFilePathTask(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return;
-        }
-        if (PlatformService is null)
-        {
-            return;
-        }
-        await ClipboardHelper.CopyTextToClipboard(path);
-    }
-    
-    private async Task CopyBase64Task(string path)
-    {
-        if (PlatformService is null)
-        {
-            return;
-        }
-        await ClipboardHelper.CopyBase64ToClipboard(path, this);
-    }
-    
-    private async Task CutFileTask(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return;
-        }
-        if (PlatformService is null)
-        {
-            return;
-        }
-        await ClipboardHelper.CutFile(path, this);
-    }
-    
-    private async Task DeleteFileTask(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return;
-        }
-        await Task.Run(() =>
-        {
-            try
-            {
-                var errorMsg = FileDeletionHelper.DeleteFileWithErrorMsg(path, recycle: false);
-                if (!string.IsNullOrWhiteSpace(errorMsg))
-                {
-                    _ = TooltipHelper.ShowTooltipMessageAsync(errorMsg);
-                }
-            }
-            catch (Exception e)
-            {
-                _ = TooltipHelper.ShowTooltipMessageAsync(e);
-#if DEBUG
-                Console.WriteLine(e);
-#endif
-            }
-        });
-        
-    }
-    
-    private async Task RecycleFileTask(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return;
-        }
-        await Task.Run(() =>
-        {
-            FileDeletionHelper.DeleteFileWithErrorMsg(path, recycle: true);
-        });
-    }
-    
-    private async Task DuplicateFileTask(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return;
-        }
+    private async Task CopyFileTask(string path) => 
+        await ClipboardFileOperations.CopyFileToClipboard(path, this).ConfigureAwait(false);
 
-        IsLoading = true;
-        if (path == FileInfo.FullName)
-        {
-            await FunctionsHelper.DuplicateFile();
-        }
-        else
-        {
-            var duplicatedPath = await FileHelper.DuplicateAndReturnFileNameAsync(path);
-            if (!string.IsNullOrWhiteSpace(duplicatedPath))
-            {
-                await ClipboardHelper.CopyAnimation();
-            }
-        }
-        IsLoading = false;
-    }
-    
-    private async Task ShowFilePropertiesTask(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return;
-        }
-        if (PlatformService is null)
-        {
-            return;
-        }
-        await Task.Run(() =>
-        {
-            PlatformService.ShowFileProperties(path);
-        });
-    }
+    private static async Task CopyFilePathTask(string path) => 
+        await ClipboardTextOperations.CopyTextToClipboard(path).ConfigureAwait(false);
 
-    private async Task PrintTask(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return;
-        }
-        if (PlatformService is null)
-        {
-            return;
-        }
-        await Task.Run(() =>
-        {
-            PlatformService?.Print(path);
-        });
-    }
-    
-    private async Task OpenWithTask(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return;
-        }
-        if (PlatformService is null)
-        {
-            return;
-        }
-        await Task.Run(() =>
-        {
-            PlatformService?.OpenWith(path);
-        });
-    }
-    
-    private async Task LocateOnDiskTask(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return;
-        }
-        if (PlatformService is null)
-        {
-            return;
-        }
-        await Task.Run(() =>
-        {
-            PlatformService?.LocateOnDisk(path);
-        });
-    }
-    
-    public async Task SetAsWallpaperTask(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return;
-        }
+    private async Task CopyBase64Task(string path) =>
+        await ClipboardImageOperations.CopyBase64ToClipboard(path, this).ConfigureAwait(false);
+
+    private async Task CutFileTask(string path) =>
+        await ClipboardFileOperations.CutFile(path, this).ConfigureAwait(false);
+
+    private static async Task DeleteFileTask(string path) =>
+        await Task.Run(() => FileDeletionHelper.DeleteFileWithErrorMsg(path, false)).ConfigureAwait(false);
+
+    private static async Task RecycleFileTask(string path) =>
+        await Task.Run(() => FileDeletionHelper.DeleteFileWithErrorMsg(path, true)).ConfigureAwait(false);
+
+    private async Task DuplicateFileTask(string path) =>
+        await ClipboardFileOperations.Duplicate(path, this).ConfigureAwait(false);
+
+    private async Task ShowFilePropertiesTask(string path) =>
+        await FileManager.ShowFileProperties(path, this).ConfigureAwait(false);
+
+    private async Task PrintTask(string path) =>
+        await FileManager.Print(path, this).ConfigureAwait(false);
+
+    private async Task OpenWithTask(string path) => 
+        await FileManager.OpenWith(path, this).ConfigureAwait(false);
+
+    private async Task LocateOnDiskTask(string path) =>
+        await FileManager.LocateOnDisk(path, this).ConfigureAwait(false);
+
+    private async Task SetAsWallpaperTask(string path) =>
         await SetAsWallpaperTask(path, WallpaperStyle.Fit).ConfigureAwait(false);
-    }
-    
-    public async Task SetAsWallpaperFilledTask(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return;
-        }
+
+    private async Task SetAsWallpaperFilledTask(string path) =>
         await SetAsWallpaperTask(path, WallpaperStyle.Fill).ConfigureAwait(false);
-    }
-    
-    public async Task SetAsWallpaperTiledTask(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return;
-        }
+
+    private async Task SetAsWallpaperTiledTask(string path) =>
         await SetAsWallpaperTask(path, WallpaperStyle.Tile).ConfigureAwait(false);
-    }
-    
-    public async Task SetAsWallpaperStretchedTask(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return;
-        }
+
+    private async Task SetAsWallpaperStretchedTask(string path) =>
         await SetAsWallpaperTask(path, WallpaperStyle.Stretch).ConfigureAwait(false);
-    }
-    
-    public async Task SetAsWallpaperCenteredTask(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return;
-        }
+
+    private async Task SetAsWallpaperCenteredTask(string path) =>
         await SetAsWallpaperTask(path, WallpaperStyle.Center).ConfigureAwait(false);
-    }
-    
-    public async Task SetAsWallpaperTask(string path, WallpaperStyle style)
-    {
 
-        if (PlatformService is null)
-        {
-            return;
-        }
-        
-        IsLoading = true;
-        try
-        {
-            var file = await ImageHelper.ConvertToCommonSupportedFormatAsync(path, this).ConfigureAwait(false);
+    private async Task SetAsWallpaperTask(string path, WallpaperStyle style) =>
+        await WallpaperManager.SetAsWallpaper(path, style, this).ConfigureAwait(false);
 
-            PlatformService?.SetAsWallpaper(file, WallpaperManager.GetWallpaperStyle(style));
-        }
-        catch (Exception e)
-        {
-            await TooltipHelper.ShowTooltipMessageAsync(e.Message, true);
-#if DEBUG
-            Console.WriteLine(e);   
-#endif
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-    
-    private async Task SetAsLockScreenTask(string path)
-    {
-        if (string.IsNullOrWhiteSpace(path))
-        {
-            return;
-        }
-        if (PlatformService is null)
-        {
-            return;
-        }
-        
-        IsLoading = true;
+    private async Task SetAsLockScreenTask(string path) =>
+        await LockScreenHelper.SetAsLockScreenTask(path, this).ConfigureAwait(false);
 
-        try
-        {
-            var file = await ImageHelper.ConvertToCommonSupportedFormatAsync(path, this).ConfigureAwait(false);
+    private void SetGalleryItemStretch(string value) => GalleryHelper.SetGalleryItemStretch(value, this);
 
-            var process = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    Verb = "runas",
-                    UseShellExecute = true,
-                    FileName = "PicView.exe",
-                    Arguments = "lockscreen," + file,
-                    WorkingDirectory = AppDomain.CurrentDomain.BaseDirectory
-                }
-            };
-            process.Start();
-            await TooltipHelper.ShowTooltipMessageAsync(TranslationHelper.Translation.Applying, true);
-            await process.WaitForExitAsync();
-        }
-        catch (Exception e)
-        {
-            await TooltipHelper.ShowTooltipMessageAsync(e.Message, true);
-#if DEBUG
-         Console.WriteLine(e);   
-#endif
-        }
-        finally
-        {
-            IsLoading = false;
-        }
-    }
-
-    public void SetGalleryItemStretch(string value)
-    {
-        if (value.Equals("Square", StringComparison.OrdinalIgnoreCase))
-        {
-            if (GalleryFunctions.IsFullGalleryOpen)
-            {
-                GalleryStretchMode.ChangeFullGalleryStretchSquare(this);
-            }
-            else
-            {
-                GalleryStretchMode.ChangeBottomGalleryStretchSquare(this);
-            }
-            return;
-        }
-        
-        if (value.Equals("FillSquare", StringComparison.OrdinalIgnoreCase))
-        {
-            if (GalleryFunctions.IsFullGalleryOpen)
-            {
-                GalleryStretchMode.ChangeFullGalleryStretchSquareFill(this);
-            }
-            else
-            {
-                GalleryStretchMode.ChangeBottomGalleryStretchSquareFill(this);
-            }
-            return;
-        }
-
-        if (Enum.TryParse<Stretch>(value, out var stretch))
-        {
-            if (GalleryFunctions.IsFullGalleryOpen)
-            {
-                GalleryStretchMode.ChangeFullGalleryItemStretch(this, stretch);
-            }
-            else
-            {
-                GalleryStretchMode.ChangeBottomGalleryItemStretch(this, stretch);
-            }
-        }
-    }
-
-    public async Task StartSlideShowTask(int milliseconds)
-    {
-        if (milliseconds <= 0)
-        {
-            await Avalonia.Navigation.Slideshow.StartSlideshow(this);
-        }
-        else
-        {
-            await Avalonia.Navigation.Slideshow.StartSlideshow(this, milliseconds);
-        }
-    }
+    public async Task StartSlideShowTask(int milliseconds) =>
+        await Avalonia.Navigation.Slideshow.StartSlideshow(this, milliseconds);
 
     #endregion Methods
-
-    public MainViewModel(IPlatformSpecificService? platformSpecificService)
-    {
-        FunctionsHelper.Vm = this;
-        PlatformService = platformSpecificService;
-
-        #region Window commands
-
-        ExitCommand = ReactiveCommand.CreateFromTask(WindowFunctions.Close);
-        MinimizeCommand = ReactiveCommand.CreateFromTask(WindowFunctions.Minimize);
-        MaximizeCommand = ReactiveCommand.CreateFromTask(WindowFunctions.MaximizeRestore);
-        RestoreCommand = ReactiveCommand.Create(WindowFunctions.Restore);
-        ToggleFullscreenCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.ToggleFullscreen);
-        NewWindowCommand = ReactiveCommand.Create(ProcessHelper.StartNewProcess);
-
-        ShowExifWindowCommand = ReactiveCommand.Create(platformSpecificService.ShowExifWindow);
-        ShowSettingsWindowCommand = ReactiveCommand.Create(platformSpecificService.ShowSettingsWindow);
-        ShowKeybindingsWindowCommand = ReactiveCommand.Create(platformSpecificService.ShowKeybindingsWindow);
-        ShowAboutWindowCommand = ReactiveCommand.Create(platformSpecificService.ShowAboutWindow);
-        ShowBatchResizeWindowCommand = ReactiveCommand.Create(platformSpecificService.ShowBatchResizeWindow);
-        ShowSingleImageResizeWindowCommand = ReactiveCommand.Create(platformSpecificService.ShowSingleImageResizeWindow);
-        ShowEffectsWindowCommand = ReactiveCommand.Create(platformSpecificService.ShowEffectsWindow);
-        #endregion Window commands
-
-        #region Navigation Commands
-
-        NextCommand = ReactiveCommand.Create(() =>
-        {
-            Task.Run(FunctionsHelper.Next);
-        });
-        
-        NextButtonCommand = ReactiveCommand.Create(() =>
-        {
-            var button = UIHelper.GetBottomBar?.NextButton;
-            if (button != null)
-            {
-                button.Interval =
-                    (int)TimeSpan.FromSeconds(SettingsHelper.Settings.UIProperties.NavSpeed).TotalMilliseconds;
-            }
-
-            Task.Run(() =>
-               NavigationManager.NavigateAndPositionCursor(next: true, arrow: false, vm: this)
-            );
-        });
-        
-        NextArrowButtonCommand = ReactiveCommand.Create( () =>
-        {
-            var button = UIHelper.GetMainView?.ClickArrowRight?.PolyButton;
-            if (button != null)
-            {
-                button.Interval =
-                    (int)TimeSpan.FromSeconds(SettingsHelper.Settings.UIProperties.NavSpeed).TotalMilliseconds;
-            }
-
-            Task.Run(() =>
-                NavigationManager.NavigateAndPositionCursor(next:true, arrow: true, vm: this)
-            );
-        });
-        
-        NextFolderCommand = ReactiveCommand.Create(() =>
-        {
-            Task.Run(FunctionsHelper.NextFolder);
-        });
-        
-        PreviousCommand = ReactiveCommand.Create(() =>
-        {
-            Task.Run(FunctionsHelper.Prev);
-        });
-        
-        PreviousButtonCommand = ReactiveCommand.Create( () =>
-        {
-            var button = UIHelper.GetBottomBar?.PreviousButton;
-            if (button != null)
-            {
-                button.Interval =
-                    (int)TimeSpan.FromSeconds(SettingsHelper.Settings.UIProperties.NavSpeed).TotalMilliseconds;
-            }
-
-            Task.Run(() =>
-                NavigationManager.NavigateAndPositionCursor(next:false, arrow: false, vm: this)
-            );
-        });
-        
-        PreviousArrowButtonCommand = ReactiveCommand.Create( () =>
-        {
-            var button = UIHelper.GetMainView?.ClickArrowLeft?.PolyButton;
-            if (button != null)
-            {
-                button.Interval =
-                    (int)TimeSpan.FromSeconds(SettingsHelper.Settings.UIProperties.NavSpeed).TotalMilliseconds;
-            }
-
-            Task.Run(() =>
-                NavigationManager.NavigateAndPositionCursor(next:false, arrow: true, vm: this)
-            );
-        });
-        
-        PreviousFolderCommand = ReactiveCommand.Create(() =>
-        {
-            Task.Run(FunctionsHelper.PrevFolder);
-        });
-        
-        Skip10Command = ReactiveCommand.CreateFromTask(FunctionsHelper.Next10);
-
-        Skip100Command = ReactiveCommand.CreateFromTask(FunctionsHelper.Next100);
-        
-        Prev10Command = ReactiveCommand.CreateFromTask(FunctionsHelper.Prev10);
-
-        Prev100Command = ReactiveCommand.CreateFromTask(FunctionsHelper.Prev100);
-
-        FirstCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.First);
-
-        LastCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.Last);
-
-        ReloadCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.Reload);
-
-        #endregion Navigation Commands
-
-        #region Sort Commands
-
-        SortFilesByNameCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.SortFilesByName);
-
-        SortFilesByCreationTimeCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.SortFilesByCreationTime);
-
-        SortFilesByLastAccessTimeCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.SortFilesByLastAccessTime);
-
-        SortFilesBySizeCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.SortFilesBySize);
-
-        SortFilesByExtensionCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.SortFilesByExtension);
-
-        SortFilesRandomlyCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.SortFilesRandomly);
-
-        SortFilesAscendingCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.SortFilesAscending);
-
-        SortFilesDescendingCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.SortFilesDescending);
-
-        #endregion Sort Commands
-
-        #region Menus
-
-        CloseMenuCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.CloseMenus);
-
-        ToggleFileMenuCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.ToggleFileMenu);
-
-        ToggleImageMenuCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.ToggleImageMenu);
-
-        ToggleSettingsMenuCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.ToggleSettingsMenu);
-
-        ToggleToolsMenuCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.ToggleToolsMenu);
-
-        #endregion Menus
-
-        #region Image commands
-
-        RotateLeftCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.RotateLeft);
-        RotateLeftButtonCommand = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await Rotation.RotateLeft(this, Rotation.RotationButton.RotateLeftButton);
-        });
-
-        RotateRightCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.RotateRight);
-        RotateRightButtonCommand = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await Rotation.RotateRight(this, Rotation.RotationButton.RotateRightButton);
-        });
-        
-        RotateRightWindowBorderButtonCommand = ReactiveCommand.CreateFromTask(async () =>
-        {
-            await Rotation.RotateRight(this, Rotation.RotationButton.WindowBorderButton);
-        });
-
-        FlipCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.Flip);
-
-        StretchCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.Stretch);
-
-        CropCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.Crop);
-
-        ToggleScrollCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.ToggleScroll);
-
-        OptimizeImageCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.OptimizeImage);
-        
-        ChangeBackgroundCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.ChangeBackground);
-        
-        ShowSideBySideCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.SideBySide);
-
-        #endregion Image commands
-
-        #region File commands
-        
-        OpenFileCommand = ReactiveCommand.Create( () =>
-        {
-            Task.Run(FunctionsHelper.Open);
-        });
-        
-        OpenLastFileCommand = ReactiveCommand.Create( () =>
-        {
-            Task.Run(FunctionsHelper.OpenLastFile);
-        });
-
-        SaveFileCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.Save);
-
-        SaveFileAsCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.SaveAs);
-
-        CopyFileCommand = ReactiveCommand.CreateFromTask<string>(CopyFileTask);
-
-        CopyFilePathCommand = ReactiveCommand.CreateFromTask<string>(CopyFilePathTask);
-        
-        FilePropertiesCommand = ReactiveCommand.CreateFromTask<string>(ShowFilePropertiesTask);
-
-        CopyImageCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.CopyImage);
-        
-        CopyBase64Command = ReactiveCommand.CreateFromTask<string>(CopyBase64Task);
-
-        CutCommand = ReactiveCommand.CreateFromTask<string>(CutFileTask);
-        
-        PasteCommand = ReactiveCommand.Create( () =>
-        {
-            Task.Run(FunctionsHelper.Paste);
-        });
-
-        OpenWithCommand = ReactiveCommand.CreateFromTask<string>(OpenWithTask);
-
-        RenameCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.Rename);
-
-        ResizeCommand = ReactiveCommand.CreateFromTask<int>(ResizeImageByPercentage);
-        ConvertCommand = ReactiveCommand.CreateFromTask<int>(ConvertFileExtension);
-
-        DuplicateFileCommand = ReactiveCommand.CreateFromTask<string>(DuplicateFileTask);
-
-        PrintCommand = ReactiveCommand.CreateFromTask<string>(PrintTask);    
-
-        DeleteFileCommand = ReactiveCommand.CreateFromTask<string>(DeleteFileTask);
-
-        RecycleFileCommand = ReactiveCommand.CreateFromTask<string>(RecycleFileTask);
-
-        LocateOnDiskCommand = ReactiveCommand.CreateFromTask<string>(LocateOnDiskTask);
-        
-        SetAsWallpaperCommand = ReactiveCommand.CreateFromTask<string>(SetAsWallpaperTask);
-        SetAsWallpaperTiledCommand = ReactiveCommand.CreateFromTask<string>(SetAsWallpaperTiledTask);
-        SetAsWallpaperStretchedCommand = ReactiveCommand.CreateFromTask<string>(SetAsWallpaperStretchedTask);
-        SetAsWallpaperCenteredCommand = ReactiveCommand.CreateFromTask<string>(SetAsWallpaperCenteredTask);
-        SetAsWallpaperFilledCommand = ReactiveCommand.CreateFromTask<string>(SetAsWallpaperFilledTask);
-        
-        SetAsLockScreenCommand = ReactiveCommand.CreateFromTask<string>(SetAsLockScreenTask);
-
-        #endregion File commands
-
-        #region EXIF commands
-
-        SetExifRating0Command = ReactiveCommand.CreateFromTask(FunctionsHelper.Set0Star);
-        SetExifRating1Command = ReactiveCommand.CreateFromTask(FunctionsHelper.Set1Star);
-        SetExifRating2Command = ReactiveCommand.CreateFromTask(FunctionsHelper.Set2Star);
-        SetExifRating3Command = ReactiveCommand.CreateFromTask(FunctionsHelper.Set3Star);
-        SetExifRating4Command = ReactiveCommand.CreateFromTask(FunctionsHelper.Set4Star);
-        SetExifRating5Command = ReactiveCommand.CreateFromTask(FunctionsHelper.Set5Star);
-
-        OpenGoogleLinkCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.OpenGoogleMaps);
-        OpenBingLinkCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.OpenBingMaps);
-
-        #endregion EXIF commands
-
-        #region Gallery Commands
-
-        ToggleGalleryCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.ToggleGallery);
-
-        ToggleBottomGalleryCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.OpenCloseBottomGallery);
-        
-        CloseGalleryCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.CloseGallery);
-        
-        GalleryItemStretchCommand = ReactiveCommand.Create<string>(SetGalleryItemStretch);
-
-        #endregion Gallery Commands
-
-        #region UI Commands
-
-        ToggleUICommand = ReactiveCommand.CreateFromTask(FunctionsHelper.ToggleInterface);
-
-        ToggleBottomNavBarCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.ToggleBottomToolbar);
-        
-        ToggleBottomGalleryShownInHiddenUICommand = ReactiveCommand.CreateFromTask(async() =>
-        {
-            await HideInterfaceLogic.ToggleBottomGalleryShownInHiddenUI(this);
-        });
-        
-        ToggleFadeInButtonsOnHoverCommand = ReactiveCommand.CreateFromTask(async() =>
-        {
-            await HideInterfaceLogic.ToggleFadeInButtonsOnHover(this);
-        });
-
-        ChangeCtrlZoomCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.ChangeCtrlZoom);
-        
-        ColorPickerCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.ColorPicker);
-        
-        SlideshowCommand = ReactiveCommand.CreateFromTask<int>(StartSlideShowTask);
-        
-        ToggleTaskbarProgressCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.ToggleTaskbarProgress);
-
-        #endregion UI Commands
-
-        #region Settings commands
-
-        ChangeAutoFitCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.AutoFitWindow);
-
-        ChangeTopMostCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.SetTopMost);
-
-        ToggleSubdirectoriesCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.ToggleSubdirectories);
-
-        ToggleLoopingCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.ToggleLooping);
-        
-        ResetSettingsCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.ResetSettings);
-        
-        RestartCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.Restart);
-        
-        ToggleUsingTouchpadCommand = ReactiveCommand.CreateFromTask(FunctionsHelper.ToggleUsingTouchpad);
-
-        #endregion Settings commands
-    }
-
-    public MainViewModel()
-    {
-        // Only use for unit test
-    }
 }

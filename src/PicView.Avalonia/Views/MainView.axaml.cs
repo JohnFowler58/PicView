@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -13,6 +12,7 @@ using PicView.Avalonia.UI;
 using PicView.Avalonia.ViewModels;
 using PicView.Avalonia.WindowBehavior;
 using PicView.Core.Extensions;
+using PicView.Core.Navigation;
 
 namespace PicView.Avalonia.Views;
 
@@ -48,8 +48,6 @@ public partial class MainView : UserControl
             }
             HideInterfaceLogic.AddHoverButtonEvents(AltButtonsPanel, vm);
             PointerWheelChanged += async (_, e) => await vm.ImageViewer.PreviewOnPointerWheelChanged(this, e);
-            
-            
         };
     }
 
@@ -98,88 +96,76 @@ public partial class MainView : UserControl
         ConversionHelper.DetermineIfOptimizeImageShouldBeEnabled(vm);
 
         // Set source for ChangeCtrlZoomImage
-        // TODO should probably be refactored inside a command (It doesn't update the UI in the zoom view, so should be made into a command)
-        if (!Application.Current.TryGetResource("ScanEyeImage", Application.Current.RequestedThemeVariant, out var scanEyeImage ))
+        if (!Application.Current.TryGetResource("ScanEyeImage", Application.Current.RequestedThemeVariant, out var scanEyeImage))
         {
             return;
         }
-        if (!Application.Current.TryGetResource("LeftRightArrowsImage", Application.Current.RequestedThemeVariant, out var leftRightArrowsImage ))
+        if (!Application.Current.TryGetResource("LeftRightArrowsImage", Application.Current.RequestedThemeVariant, out var leftRightArrowsImage))
         {
             return;
         }
         var isNavigatingWithCtrl = Settings.Zoom.CtrlZoom;
         vm.ChangeCtrlZoomImage = isNavigatingWithCtrl ? leftRightArrowsImage as DrawingImage : scanEyeImage as DrawingImage;
 
-        // Update file history
-        var count = FileHistoryNavigation.GetCount();
-        if (RecentFilesCM.Items.Count < count)
-        {
-            for (var i = RecentFilesCM.Items.Count; i < count; i++)
-            {
-                AddOrReplaceMenuItem(i, vm, isReplace: false);
-            }
-        }
-        else
-        {
-            for (var i = 0; i < count; i++)
-            {
-                AddOrReplaceMenuItem(i, vm, isReplace: true);
-            }
-        }
+        // Update file history menu items
+        UpdateFileHistoryMenuItems(vm);
     }
 
-    private void AddOrReplaceMenuItem(int index, MainViewModel vm, bool isReplace)
+    private void UpdateFileHistoryMenuItems(MainViewModel vm)
     {
-        if (!Application.Current.TryGetResource("SecondaryAccentColor", Application.Current.RequestedThemeVariant, out var secondaryAccentColor))
+        // Clear existing items 
+        RecentFilesCM.Items.Clear();
+        var currentFilePath = NavigationManager.GetCurrentFileName;
+            
+        // Add menu items for each history entry
+        for (var i = 0; i < FileHistory.Count; i++)
         {
-            return;
-        }
-
-        try
-        {
-#if DEBUG
-            Debug.Assert(secondaryAccentColor != null, nameof(secondaryAccentColor) + " != null");
-#endif
-            var secondaryAccentBrush = (SolidColorBrush)secondaryAccentColor;
-            var fileLocation = FileHistoryNavigation.GetFileLocation(index);
-            var selected = NavigationManager.GetCurrentIndex == NavigationManager.GetCollection.IndexOf(fileLocation);
-            var header = Path.GetFileNameWithoutExtension(fileLocation);
-            header = header.Length > 60 ? header.Shorten(60) : header;
-        
+            var fileLocation = FileHistory.GetEntry(i);
+            if (string.IsNullOrEmpty(fileLocation))
+                continue;
+                
+            var isSelected = fileLocation == currentFilePath;
+            var filename = Path.GetFileNameWithoutExtension(fileLocation);
+            var header = filename.Length > 60 ? filename.Shorten(60) : filename;
+            
             var item = new MenuItem
             {
-                Header = header,
+                Header = header
             };
-
-            if (selected)
+            if (isSelected)
             {
-                item.Foreground = secondaryAccentBrush;
+                item.Classes.Add("active");
             }
-        
+            
+            var filePath = fileLocation; // Local copy for the closure
             item.Click += async delegate
             {
-                await NavigationManager.LoadPicFromStringAsync(fileLocation, vm).ConfigureAwait(false);
+                await NavigationManager.LoadPicFromStringAsync(filePath, vm).ConfigureAwait(false);
             };
-        
+            
             ToolTip.SetTip(item, fileLocation);
-
-            if (isReplace)
-            {
-                RecentFilesCM.Items[index] = item;
-            }
-            else
-            {
-                RecentFilesCM.Items.Insert(index, item);
-            }
+            
+            RecentFilesCM.Items.Add(item);
         }
-#if DEBUG
-        catch (Exception e)
-        {
-            Console.WriteLine(e);
-        }
-#else
-        catch (Exception){}
-#endif
+        
+        // TODO add clear history translations
+        // Add a separator and "Clear history" option if there are items
+        // if (FileHistory.Count <= 0)
+        // {
+        //     return;
+        // }
+        //
+        // RecentFilesCM.Items.Add(new Separator());
+        //     
+        // var clearItem = new MenuItem { Header = TranslationHelper.GetTranslation("ClearHistory") };
+        // clearItem.Click += delegate
+        // {
+        //     FileHistory.Clear();
+        //     FileHistory.SaveToFile();
+        //     RecentFilesCM.Items.Clear();
+        // };
+        //     
+        // RecentFilesCM.Items.Add(clearItem);
     }
 
     private async Task Drop(object? sender, DragEventArgs e)

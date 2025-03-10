@@ -108,7 +108,7 @@ public static class FileListManager
                 }
 
                 NavigationManager.UpdateFileListAndIndex(files, files.IndexOf(vm.FileInfo.FullName));
-                SetTitleHelper.SetTitle(vm);
+                TitleManager.SetTitle(vm);
                 return true;
             }
             catch (Exception e)

@@ -42,7 +42,12 @@
             </MenuItem>
 
             <!--  Save  -->
-            <MenuItem Command="{CompiledBinding SaveFileCommand}" Header="{CompiledBinding Save, Mode=OneWay}">
+            <MenuItem
+                Command="{CompiledBinding SaveFileCommand}"
+                Header="{CompiledBinding Save,
+                                         Mode=OneWay}"
+                IsEnabled="{CompiledBinding ImageSource,
+                                            Converter={x:Static ObjectConverters.IsNotNull}}">
                 <MenuItem.Icon>
                     <Path
                         Data="{StaticResource SaveGeometry}"
@@ -54,7 +59,12 @@
             </MenuItem>
 
             <!--  Save as  -->
-            <MenuItem Command="{CompiledBinding SaveFileAsCommand}" Header="{CompiledBinding SaveAs, Mode=OneWay}">
+            <MenuItem
+                Command="{CompiledBinding SaveFileAsCommand}"
+                Header="{CompiledBinding SaveAs,
+                                         Mode=OneWay}"
+                IsEnabled="{CompiledBinding ImageSource,
+                                            Converter={x:Static ObjectConverters.IsNotNull}}">
                 <MenuItem.Icon>
                     <Path
                         Data="{StaticResource SaveGeometry}"
@@ -71,7 +81,9 @@
                 CommandParameter="{CompiledBinding FileInfo.FullName,
                                                    FallbackValue=''}"
                 Header="{CompiledBinding Print,
-                                         Mode=OneWay}">
+                                         Mode=OneWay}"
+                IsEnabled="{CompiledBinding ImageSource,
+                                            Converter={x:Static ObjectConverters.IsNotNull}}">
                 <MenuItem.Icon>
                     <Path
                         Data="{StaticResource PrintGeometry}"
@@ -88,7 +100,9 @@
                 CommandParameter="{CompiledBinding FileInfo.FullName,
                                                    FallbackValue=''}"
                 Header="{CompiledBinding OpenWith,
-                                         Mode=OneWay}">
+                                         Mode=OneWay}"
+                IsEnabled="{CompiledBinding ImageSource,
+                                            Converter={x:Static ObjectConverters.IsNotNull}}">
                 <MenuItem.Icon>
                     <Path
                         Data="{StaticResource OpenWithGeometry}"
@@ -360,7 +374,7 @@
                     Command="{CompiledBinding ToggleBottomGalleryCommand}"
                     Header="{CompiledBinding GetIsShowingBottomGalleryTranslation,
                                              Mode=OneWay}"
-                    IsChecked="{CompiledBinding IsGalleryShown}">
+                    IsChecked="{CompiledBinding IsBottomGalleryShown}">
                     <MenuItem.Icon>
                         <Image Height="12" Width="12">
                             <DrawingImage>
@@ -1155,7 +1169,7 @@
             GalleryMode="{CompiledBinding GalleryMode,
                                           Mode=OneWay}"
             Height="NaN"
-            IsVisible="{CompiledBinding IsGalleryShown,
+            IsVisible="{CompiledBinding IsBottomGalleryShown,
                                         Mode=OneWay}"
             VerticalAlignment="{CompiledBinding GalleryVerticalAlignment,
                                                 Mode=OneWay}"

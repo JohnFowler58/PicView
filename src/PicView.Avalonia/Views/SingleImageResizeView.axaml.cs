@@ -89,7 +89,7 @@ public partial class SingleImageResizeView : UserControl
                      vm.FileInfo.Extension.Equals(".png", StringComparison.OrdinalIgnoreCase))
             {
                 QualitySlider.IsEnabled = true;
-                var quality = ImageFunctionHelper.GetCompressionQuality(vm.FileInfo.FullName);
+                var quality = ImageAnalyzer.GetCompressionQuality(vm.FileInfo.FullName);
                 QualitySlider.Value = quality;
             }
             else
@@ -256,7 +256,7 @@ public partial class SingleImageResizeView : UserControl
             vm.FileInfo.Extension.Equals(".png", StringComparison.OrdinalIgnoreCase))
         {
             QualitySlider.IsEnabled = true;
-            var quality = ImageFunctionHelper.GetCompressionQuality(vm.FileInfo.FullName);
+            var quality = ImageAnalyzer.GetCompressionQuality(vm.FileInfo.FullName);
             QualitySlider.Value = quality;
         }
         else

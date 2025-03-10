@@ -5,6 +5,8 @@ using PicView.Avalonia.Gallery;
 using PicView.Avalonia.UI;
 using PicView.Avalonia.ViewModels;
 using PicView.Avalonia.Views.UC.Menus;
+using PicView.Avalonia.WindowBehavior;
+using PicView.Core.Gallery;
 
 namespace PicView.Avalonia.ImageTransformations;
 public static class Rotation
@@ -113,5 +115,99 @@ public static class Rotation
             return;
         }
         await MoveCursorAfterRotation(vm, rotationButton);
+    }
+    
+    public static void Flip(MainViewModel vm)
+    {
+        if (vm.ScaleX == 1)
+        {
+            vm.ScaleX = -1;
+            vm.GetIsFlippedTranslation = vm.UnFlip;
+        }
+        else
+        {
+            vm.ScaleX = 1;
+            vm.GetIsFlippedTranslation = vm.Flip;
+        }
+
+        Dispatcher.UIThread.Invoke(() => { vm.ImageViewer.Flip(true); });
+    }
+    
+    /// <summary>
+    /// Navigates up or rotates the image based on current state
+    /// </summary>
+    public static async Task NavigateUp(MainViewModel? vm)
+    {
+        if (vm is null)
+        {
+            return;
+        }
+
+        if (GalleryFunctions.IsFullGalleryOpen)
+        {
+            GalleryNavigation.NavigateGallery(Direction.Up, vm);
+            return;
+        }
+
+        await Dispatcher.UIThread.InvokeAsync(() => 
+        {
+            if (vm.IsScrollingEnabled)
+            {
+                vm.ImageViewer.ImageScrollViewer.LineUp();
+            }
+            else
+            {
+                vm.ImageViewer.Rotate(true);
+            }
+        });
+    }
+
+    /// <summary>
+    /// Navigates down or rotates the image based on current state
+    /// </summary>
+    public static async Task NavigateDown(MainViewModel? vm)
+    {
+        if (vm is null)
+        {
+            return;
+        }
+
+        if (GalleryFunctions.IsFullGalleryOpen)
+        {
+            GalleryNavigation.NavigateGallery(Direction.Down, vm);
+            return;
+        }
+
+        await Dispatcher.UIThread.InvokeAsync(() => 
+        {
+            if (vm.IsScrollingEnabled)
+            {
+                vm.ImageViewer.ImageScrollViewer.LineDown();
+            }
+            else
+            {
+                vm.ImageViewer.Rotate(false);
+            }
+        });
+    }
+
+    /// <summary>
+    /// Centers the window or gallery based on current state
+    /// </summary>
+    public static void Center(MainViewModel? vm)
+    {
+        if (vm is null)
+        {
+            return;
+        }
+        
+        if (GalleryFunctions.IsFullGalleryOpen)
+        {
+            GalleryFunctions.CenterGallery(vm);
+        }
+        else
+        {
+            WindowFunctions.CenterWindowOnScreen();
+        }
     }
 }

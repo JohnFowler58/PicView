@@ -10,6 +10,12 @@
         BottomToClosed,
         ClosedToFull,
         ClosedToBottom,
+        /// <summary>
+        /// Used when the gallery should be closed
+        /// </summary>
         Closed,
+        /// <summary>
+        /// Used when the gallery should be opened, with no animation. 
+        /// </summary>
         BottomNoAnimation
     }

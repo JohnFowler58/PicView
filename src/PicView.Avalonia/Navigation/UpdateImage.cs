@@ -79,9 +79,10 @@ public static class UpdateImage
 
             vm.ImageType = preLoadValue.ImageModel.ImageType;
 
-            WindowResizing.SetSize(preLoadValue.ImageModel.PixelWidth, preLoadValue.ImageModel.PixelHeight,
-                nextPreloadValue?.ImageModel?.PixelWidth ?? 0, nextPreloadValue?.ImageModel?.PixelHeight ?? 0,
-                preLoadValue.ImageModel.Rotation, vm);
+            if (!Settings.Zoom.ScrollEnabled)
+            {
+                SetSize();
+            }
 
             UIHelper.GetToolTipMessage.IsVisible = false;
         }, DispatcherPriority.Send);
@@ -90,7 +91,7 @@ public static class UpdateImage
 
         if (Settings.ImageScaling.ShowImageSideBySide)
         {
-            SetTitleHelper.SetSideBySideTitle(vm, preLoadValue.ImageModel, nextPreloadValue?.ImageModel);
+            TitleManager.SetSideBySideTitle(vm, preLoadValue.ImageModel, nextPreloadValue?.ImageModel);
         }
         else
         {
@@ -98,17 +99,27 @@ public static class UpdateImage
             {
                 if (TiffManager.IsTiff(preLoadValue.ImageModel.FileInfo.FullName))
                 {
-                    SetTitleHelper.TrySetTiffTitle(preLoadValue.ImageModel, vm);
+                    TitleManager.TrySetTiffTitle(preLoadValue.ImageModel, vm);
                 }
                 else
                 {
-                    SetTitleHelper.SetTitle(vm, preLoadValue.ImageModel);
+                    TitleManager.SetTitle(vm, preLoadValue.ImageModel);
                 }
             }
             else
             {
-                SetTitleHelper.SetTitle(vm, preLoadValue.ImageModel);
+                TitleManager.SetTitle(vm, preLoadValue.ImageModel);
             }
+        }
+        
+        if (Settings.Zoom.ScrollEnabled)
+        {
+            // Bad fix for scrolling
+            // TODO: Implement proper scrolling fix
+            Settings.Zoom.ScrollEnabled = false;
+            await Dispatcher.UIThread.InvokeAsync(SetSize);
+            Settings.Zoom.ScrollEnabled = true;
+            await Dispatcher.UIThread.InvokeAsync(SetSize, DispatcherPriority.Send);
         }
 
         if (Settings.WindowProperties.KeepCentered)
@@ -126,6 +137,16 @@ public static class UpdateImage
         }
 
         SetStats(vm, index, preLoadValue.ImageModel);
+        
+        return;
+
+        void SetSize()
+        {
+            WindowResizing.SetSize(preLoadValue.ImageModel.PixelWidth, preLoadValue.ImageModel.PixelHeight,
+                nextPreloadValue?.ImageModel?.PixelWidth ?? 0, nextPreloadValue?.ImageModel?.PixelHeight ?? 0,
+                preLoadValue.ImageModel.Rotation, vm);
+        }
+
     }
 
     #endregion
@@ -179,7 +200,7 @@ public static class UpdateImage
             }
         }, DispatcherPriority.Render);
         
-        SetTitleHelper.SetTiffTitle(tiffNavigationInfo, width, height, index, fileInfo, vm);
+        TitleManager.SetTiffTitle(tiffNavigationInfo, width, height, index, fileInfo, vm);
 
         var imageModel = new ImageModel
         {
@@ -206,16 +227,7 @@ public static class UpdateImage
     /// <param name="vm">The main view model instance.</param>
     public static void SetSingleImage(object source, ImageType imageType, string name, MainViewModel vm)
     {
-        ExecuteSetSingleImageAsync(
-            source,
-            imageType,
-            name,
-            vm,
-            (action, priority) =>
-            {
-                Dispatcher.UIThread.Invoke(action, priority);
-                return Task.CompletedTask;
-            }).GetAwaiter().GetResult();
+        SetSingleImageAsync(source, imageType, name, vm).GetAwaiter().GetResult();
     }
 
     /// <inheritdoc cref="SetSingleImage" />
@@ -274,15 +286,9 @@ public static class UpdateImage
             height = bitmap?.PixelSize.Height ?? 0;
         }
 
-        if (GalleryFunctions.IsBottomGalleryOpen)
-        {
-            await dispatchAction(() => { vm.GalleryMode = GalleryMode.BottomToClosed; }, DispatcherPriority.Render);
-            vm.GalleryMode = GalleryMode.Closed;
-        }
-
         vm.FileInfo = null;
 
-        await dispatchAction(() => { WindowResizing.SetSize(width, height, 0, 0, 0, vm); }, DispatcherPriority.Render);
+        await dispatchAction(() => { WindowResizing.SetSize(width, height, 0, 0, 0, vm); }, DispatcherPriority.Send);
 
         var singeImageWindowTitles = ImageTitleFormatter.GenerateTitleForSingleImage(width, height, name, 1);
         vm.WindowTitle = singeImageWindowTitles.TitleWithAppName;
@@ -294,7 +300,11 @@ public static class UpdateImage
         vm.PixelWidth = width;
         vm.PixelHeight = height;
 
-        vm.GalleryMargin = new Thickness(0);
+        if (Settings.Gallery.IsBottomGalleryShown)
+        {
+            vm.GalleryMode = GalleryMode.Closed;
+            vm.GalleryMargin = new Thickness(0);
+        }
 
         await dispatchAction(() => { UIHelper.GetGalleryView.IsVisible = false; }, DispatcherPriority.Render);
         await NavigationManager.DisposeImageIteratorAsync();

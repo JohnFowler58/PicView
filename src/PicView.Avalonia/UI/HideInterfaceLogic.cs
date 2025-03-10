@@ -39,11 +39,11 @@ public static class HideInterfaceLogic
                             vm.GalleryMode = GalleryMode.BottomToClosed;
                         }
                     });
-                    vm.IsGalleryShown = false;
+                    vm.IsBottomGalleryShown = false;
                 }
                 else
                 {
-                    vm.IsGalleryShown = Settings.Gallery.ShowBottomGalleryInHiddenUI;
+                    vm.IsBottomGalleryShown = Settings.Gallery.ShowBottomGalleryInHiddenUI;
                 }
             }
         }
@@ -76,17 +76,17 @@ public static class HideInterfaceLogic
                         _ = GalleryLoad.LoadGallery(vm, vm.FileInfo.DirectoryName);
                     }
 
-                    vm.IsGalleryShown = true;
+                    vm.IsBottomGalleryShown = true;
                 }
                 else
                 {
-                    vm.IsGalleryShown = false;
+                    vm.IsBottomGalleryShown = false;
                 }
             }
         }
         
         WindowResizing.SetSize(vm);
-        UIHelper.CloseMenus(vm);
+        MenuManager.CloseMenus(vm);
         await SaveSettingsAsync();
     }
     
@@ -271,11 +271,11 @@ public static class HideInterfaceLogic
             if (!Settings.UIProperties.ShowInterface && !Settings.Gallery
                     .ShowBottomGalleryInHiddenUI)
             {
-                vm.IsGalleryShown = false;
+                vm.IsBottomGalleryShown = false;
             }
             else
             {
-                vm.IsGalleryShown = Settings.Gallery.IsBottomGalleryShown;
+                vm.IsBottomGalleryShown = Settings.Gallery.IsBottomGalleryShown;
             }
         }
         

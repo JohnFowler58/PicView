@@ -4,6 +4,9 @@ namespace PicView.Core.Calculations;
 
 public static class ImageSizeCalculationHelper
 {
+    private const int MinTitleWidth = 295;
+    private const int Padding = 45;
+    
     /// <summary>
     ///  Returns the interface size of the titlebar based on OS
     /// </summary>
@@ -21,7 +24,6 @@ public static class ImageSizeCalculationHelper
         double monitorMinHeight,
         double interfaceSize,
         double rotationAngle,
-        double padding,
         double dpiScaling,
         double uiTopSize,
         double uiBottomSize,
@@ -42,7 +44,7 @@ public static class ImageSizeCalculationHelper
                          Settings.WindowProperties.Maximized;
             
         var borderSpaceHeight = fullscreen ? 0 : uiTopSize + uiBottomSize + galleryHeight;
-        var borderSpaceWidth = fullscreen ? 0 : padding;
+        var borderSpaceWidth = fullscreen ? 0 : Padding;
 
         var workAreaWidth = monitorWidth - borderSpaceWidth;
         var workAreaHeight = monitorHeight - borderSpaceHeight;
@@ -52,18 +54,21 @@ public static class ImageSizeCalculationHelper
             workAreaWidth -= SizeDefaults.ScrollbarSize * dpiScaling;
             containerWidth -= SizeDefaults.ScrollbarSize * dpiScaling;
 
-            maxWidth = workAreaWidth - padding;
-            maxHeight = height;
+            maxWidth = Settings.ImageScaling.StretchImage 
+                ? workAreaWidth 
+                : Math.Min(workAreaWidth - Padding, width);
+            
+            maxHeight = workAreaHeight;
         }
         else if (Settings.WindowProperties.AutoFit)
         {
             maxWidth = Settings.ImageScaling.StretchImage
-                ? workAreaWidth - padding
-                : Math.Min(workAreaWidth - padding, width);
+                ? workAreaWidth - Padding
+                : Math.Min(workAreaWidth - Padding, width);
                     
             maxHeight = Settings.ImageScaling.StretchImage
-                ? workAreaHeight - padding
-                : Math.Min(workAreaHeight - padding, height);
+                ? workAreaHeight - Padding
+                : Math.Min(workAreaHeight - Padding, height);
         }
         else
         {
@@ -125,19 +130,19 @@ public static class ImageSizeCalculationHelper
         {
             if (Settings.WindowProperties.AutoFit)
             {
-                xWidth = maxWidth - SizeDefaults.ScrollbarSize - 10;
-                xHeight = maxWidth * height / width;
+                xWidth = width * aspectRatio;
+                xHeight = height * aspectRatio;
 
-                scrollWidth = maxWidth;
-                scrollHeight = containerHeight - padding - 8;
+                scrollWidth = Math.Max(xWidth + SizeDefaults.ScrollbarSize, SizeDefaults.WindowMinSize + SizeDefaults.ScrollbarSize + Padding + 16);
+                scrollHeight = containerHeight - margin;
             }
             else
             {
-                scrollWidth = containerWidth + SizeDefaults.ScrollbarSize;
-                scrollHeight = containerHeight - margin;
-
                 xWidth = containerWidth - SizeDefaults.ScrollbarSize + 10;
                 xHeight = height / width * xWidth;
+                
+                scrollWidth = containerWidth + SizeDefaults.ScrollbarSize;
+                scrollHeight = containerHeight - margin;
             }
         }
         else
@@ -165,7 +170,6 @@ public static class ImageSizeCalculationHelper
         double monitorMinHeight,
         double interfaceSize,
         double rotationAngle,
-        double padding,
         double dpiScaling,
         double uiTopSize,
         double uiBottomSize,
@@ -181,11 +185,11 @@ public static class ImageSizeCalculationHelper
 
         // Get sizes for both images
         var firstSize = GetImageSize(width, height, monitorWidth, monitorHeight, monitorMinWidth, monitorMinHeight,
-            interfaceSize, rotationAngle, padding, dpiScaling, uiTopSize, uiBottomSize, galleryHeight,
+            interfaceSize, rotationAngle, dpiScaling, uiTopSize, uiBottomSize, galleryHeight,
             containerWidth,
             containerHeight);
         var secondSize = GetImageSize(secondaryWidth, secondaryHeight, monitorWidth, monitorHeight, monitorMinWidth,
-            monitorMinHeight, interfaceSize, rotationAngle, padding, dpiScaling, uiTopSize, uiBottomSize,
+            monitorMinHeight, interfaceSize, rotationAngle, dpiScaling, uiTopSize, uiBottomSize,
             galleryHeight,
             containerWidth, containerHeight);
 
@@ -201,7 +205,7 @@ public static class ImageSizeCalculationHelper
 
         if (Settings.WindowProperties.AutoFit)
         {
-            var widthPadding = Settings.ImageScaling.StretchImage ? 4 : padding;
+            var widthPadding = Settings.ImageScaling.StretchImage ? 4 : Padding;
             var availableWidth = monitorWidth - widthPadding;
             var availableHeight = monitorHeight - (widthPadding + uiBottomSize + uiTopSize);
             if (rotationAngle is 0 or 180)
@@ -271,9 +275,8 @@ public static class ImageSizeCalculationHelper
                                  Settings.WindowProperties.Maximized;
                 var borderSpaceHeight = fullscreen ? 0 : uiTopSize + uiBottomSize + galleryHeight;
                 var workAreaHeight = monitorHeight * dpiScaling - borderSpaceHeight;
-                scrollHeight = Settings.ImageScaling.StretchImage
-                    ? workAreaHeight
-                    : workAreaHeight - padding;
+                scrollHeight = Math.Min(xHeight,
+                    Settings.ImageScaling.StretchImage ? workAreaHeight : workAreaHeight - Padding);
             }
             else
             {
@@ -325,22 +328,23 @@ public static class ImageSizeCalculationHelper
                 }
             }
 
-            titleMaxWidth = titleMaxWidth - interfaceSize < interfaceSize
-                ? interfaceSize
+            titleMaxWidth = titleMaxWidth - interfaceSize < MinTitleWidth
+                ? MinTitleWidth
                 : titleMaxWidth - interfaceSize;
-            
-            
-            if (Settings.Zoom.ScrollEnabled)
-            {
-                titleMaxWidth += SizeDefaults.ScrollbarSize + 10;
-            }
         }
         else
         {
             // Fix title width to window size
             titleMaxWidth = containerWidth - interfaceSize <= 0 ? 0 : containerWidth - interfaceSize;
-            
-            if (Settings.Zoom.ScrollEnabled)
+        }
+
+        if (Settings.Zoom.ScrollEnabled)
+        {
+            if (Settings.ImageScaling.ShowImageSideBySide)
+            {
+                titleMaxWidth += SizeDefaults.ScrollbarSize + 10;
+            }
+            else
             {
                 titleMaxWidth += SizeDefaults.ScrollbarSize;
             }
