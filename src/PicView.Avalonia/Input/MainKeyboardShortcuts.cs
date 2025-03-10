@@ -215,7 +215,7 @@ public static class MainKeyboardShortcuts
     /// <summary>
     /// Resets the keyboard state tracking.
     /// </summary>
-    private static void Reset()
+    public static void Reset()
     {
         IsKeyHeldDown = false;
         CurrentKeys = null;

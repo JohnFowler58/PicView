@@ -117,16 +117,6 @@ public static class StartUpHelper
         HandleWindowControlSettings(vm, desktop);
         ValidateGallerySettings(vm, settingsExists);
         SetWindowEventHandlers(window);
-        MenuManager.AddMenus();
-        FileHistory.Initialize();
-
-        Application.Current.Name = "PicView";
-
-        if (Settings.UIProperties.OpenInSameWindow)
-        {
-            // No other instance is running, create named pipe server
-            _ = IPC.StartListeningForArguments(vm);
-        }
         
         // Fixes incorrect fullscreen window
         if (Settings.WindowProperties.Fullscreen)
@@ -138,6 +128,17 @@ public static class StartUpHelper
             }, DispatcherPriority.ApplicationIdle).Wait();
             WindowFunctions.Fullscreen(vm, desktop);
         }
+        
+        if (Settings.UIProperties.OpenInSameWindow)
+        {
+            // No other instance is running, create named pipe server
+            _ = IPC.StartListeningForArguments(vm);
+        }
+        
+        MenuManager.AddMenus();
+        FileHistory.Initialize();
+
+        Application.Current.Name = "PicView";
     }
 
     private static void HandleThemeUpdates(MainViewModel vm)
@@ -336,5 +337,11 @@ public static class StartUpHelper
         w.KeyDown += async (_, e) => await MainKeyboardShortcuts.MainWindow_KeysDownAsync(e).ConfigureAwait(false);
         w.KeyUp += (_, e) => MainKeyboardShortcuts.MainWindow_KeysUp(e);
         w.PointerPressed += async (_, e) => await MouseShortcuts.MainWindow_PointerPressed(e).ConfigureAwait(false);
+        
+        w.Deactivated += delegate
+        {
+            MainKeyboardShortcuts.Reset();
+            MainKeyboardShortcuts.ClearKeyDownModifiers();
+        };
     }
 }
