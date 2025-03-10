@@ -13,5 +13,6 @@ public enum Languages
     fr,
     it,
     ru,
-    ro
+    ro,
+    hu
 }
