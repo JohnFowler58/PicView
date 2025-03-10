@@ -33,8 +33,7 @@ public class CropResizeHandler(CropControl control)
             return;
         }
 
-        var resizer = CropResizeStrategyFactory.Create(mode);
-        resizer.Resize(control, e, _resizeStart, _originalRect, vm);
+        CropResizer.Resize(control, e, _resizeStart, _originalRect, vm, mode);
     }
 
     public void OnResizeEnd(object? sender, PointerReleasedEventArgs e)
